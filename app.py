@@ -88,8 +88,11 @@ def camera_loop():
             
         time.sleep(0.03) # ~30 FPS
 
-_cam_thread = threading.Thread(target=camera_loop, daemon=True)
-_cam_thread.start()
+if not os.environ.get("VERCEL"):
+    _cam_thread = threading.Thread(target=camera_loop, daemon=True)
+    _cam_thread.start()
+else:
+    print("[INFO] Running on Vercel: Background camera thread disabled.")
 
 # ── Background detection thread ────────────────────────────────────────────────
 def detection_loop():
@@ -152,8 +155,11 @@ def detection_loop():
 
         time.sleep(0.05)
 
-_det_thread = threading.Thread(target=detection_loop, daemon=True)
-_det_thread.start()
+if not os.environ.get("VERCEL"):
+    _det_thread = threading.Thread(target=detection_loop, daemon=True)
+    _det_thread.start()
+else:
+    print("[INFO] Running on Vercel: Background detection thread disabled.")
 
 # ── MJPEG stream ──────────────────────────────────────────────────────────────
 def _stream_generator(source):
