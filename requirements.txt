@@ -3,6 +3,5 @@ opencv-python-headless
 numpy
 ultralytics
 pandas
-pygame
 gunicorn
 openpyxl
