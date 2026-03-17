@@ -51,7 +51,14 @@ _frame_lock = threading.Lock()
 last_screenshot_time = 0
 
 # ── Multi-Camera State ────────────────────────────────────────────────────────
-camera_sources = [{"id": 0, "name": "Main Entry - Cam 01", "source": 0}]
+default_source = os.environ.get("CAMERA_SOURCE", 0)
+try:
+    if str(default_source).isdigit():
+        default_source = int(default_source)
+except:
+    pass
+
+camera_sources = [{"id": 0, "name": "Main Entry - Cam 01", "source": default_source}]
 active_camera_id = 0
 
 # ── Camera Thread ─────────────────────────────────────────────────────────────
