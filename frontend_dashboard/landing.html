@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMPARO - AI-Powered Smart Surveillance</title>
+    <meta name="description" content="Next-generation AI security ecosystem for intelligent monitoring and predictive threat insights.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero {
+            height: 90vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url("{{ url_for('static', filename='img/hero_bg.png') }}");
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(transparent, #000);
+        }
+
+        .hero-content {
+            max-width: 600px;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 35px;
+            line-height: 1.6;
+            border-left: 3px solid var(--primary-red);
+            padding-left: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-primary {
+            background: var(--primary-red);
+            color: #fff;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #ff524f;
+            box-shadow: 0 0 25px var(--primary-red-glow);
+            transform: scale(1.05);
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            background: #25d366;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .nav-menu { display: none; }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    
+    <!-- Top Info Bar -->
+    <div class="top-info-bar">
+        <div class="top-info-item">
+            <i class="fas fa-phone-alt"></i> +91 96642 90455
+        </div>
+        <div class="top-info-item">
+            <i class="fas fa-envelope"></i> info@amparoglobal.com
+        </div>
+        <div class="social-links">
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-logo">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AMPARO Logo">
+            <h1>AMPARO</h1>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="/" class="nav-item active">Home</a></li>
+            <li><a href="#" class="nav-item">About Us</a></li>
+            <li><a href="#" class="nav-item">Careers</a></li>
+        </ul>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <a href="/login" class="nav-item" style="font-size: 0.9rem; letter-spacing: 1px;">Log in</a>
+            <a href="/register_user" class="btn-contact">Sign up <i class="fas fa-user-plus"></i></a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title text-gradient">AMPARO Reimaging smart Surveillance with AI</h1>
+            <p class="hero-subtitle">
+                An upcoming AI-powered smart security ecosystem designed to deliver intelligent monitoring, smart alerts and predictive threat insights – even in low-connectivity environments
+            </p>
+            <div class="btn-group">
+                <a href="/login" class="btn-primary">JOIN EARLY ACCESS</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Floating WhatsApp -->
+    <a href="https://wa.me/919664290455" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+</body>
+</html>

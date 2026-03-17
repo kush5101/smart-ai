@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Manager | AMPARO</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body.dark-theme {
+            overflow-y: auto;
+        }
+
+        .faces-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 30px;
+            gap: 20px;
+        }
+
+        /* Header */
+        .faces-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .faces-header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            color: var(--primary-red);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 7px 14px;
+            border: 1px solid rgba(229, 57, 53, 0.3);
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .faces-header h1 {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        /* Two column layout */
+        .faces-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+            flex-grow: 1;
+        }
+
+        /* Registration panel */
+        .reg-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .cam-preview {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+
+        .cam-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cam-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .reg-form-panel {
+            padding: 16px 18px;
+        }
+
+        .reg-form-panel h3 {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+        }
+
+        .reg-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .reg-input-group input {
+            background: #1a1a1f;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .reg-input-group input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+        }
+
+        .reg-btn {
+            background: var(--primary-red);
+            color: #fff;
+            border: none;
+            padding: 11px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            width: 100%;
+        }
+
+        .reg-btn:hover {
+            opacity: 0.85;
+        }
+
+        .reg-msg {
+            font-size: 0.82rem;
+            min-height: 18px;
+            text-align: center;
+        }
+
+        .reg-msg.success {
+            color: var(--accent-safe);
+        }
+
+        .reg-msg.error {
+            color: #ef4444;
+        }
+
+        /* Known faces grid */
+        .known-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .known-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .known-panel-header h3 {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        #face-count {
+            font-size: 0.8rem;
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .faces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 14px;
+        }
+
+        .face-card {
+            background: rgba(26, 29, 36, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s;
+            text-align: center;
+        }
+
+        .face-card:hover {
+            border-color: rgba(229, 57, 53, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .face-card img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            display: block;
+        }
+
+        .face-card-info {
+            padding: 8px 6px;
+        }
+
+        .face-card-name {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .empty-faces {
+            grid-column: 1/-1;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+    <div class="faces-page">
+
+        <!-- Navigation -->
+        <nav class="navbar glass" style="margin: -20px -30px 20px -30px; padding: 10px 5%;">
+            <div class="nav-logo">
+                <a href="/monitor" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AMPARO Logo" style="height: 55px;">
+                </a>
+            </div>
+            
+            <div class="header-right">
+                <div id="face-count-summary" style="margin-right: 20px; font-family: 'Oswald'; color: var(--text-muted);">
+                    <span id="face-count-val" style="color: var(--primary-red);">0</span> REGISTERED FACES
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <a href="/logout" class="btn-contact" style="padding: 8px 15px; background: rgba(255,255,255,0.1);"><i class="fas fa-sign-out-alt"></i></a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="faces-layout">
+
+            <!-- Left: Camera + Register form -->
+            <div class="reg-panel">
+                <div class="cam-preview">
+                    <img src="{{ url_for('video_feed') }}" alt="Live Camera">
+                    <div class="cam-label">LIVE CAM</div>
+                </div>
+
+                <div class="reg-form-panel glass">
+                    <h3>➕ REGISTER NEW FACE</h3>
+
+                    <!-- Progress Tracker -->
+                    <div class="reg-progress"
+                        style="display: flex; justify-content: space-between; margin-bottom: 20px; position: relative; padding: 0 10px;">
+                        <div
+                            style="position: absolute; top: 12px; left: 10px; right: 10px; height: 2px; background: rgba(255,255,255,0.1); z-index: 0;">
+                        </div>
+                        <div id="prog-line"
+                            style="position: absolute; top: 12px; left: 10px; width: 0%; height: 2px; background: var(--primary-red); z-index: 1; transition: width 0.3s;">
+                        </div>
+
+                        <div class="step-dot active" id="step-1"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1f; border: 2px solid var(--primary-red); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; z-index: 2; color: var(--primary-red); transition: all 0.3s;">
+                            1</div>
+                        <div class="step-dot" id="step-2"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1f; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; z-index: 2; color: var(--text-muted); transition: all 0.3s;">
+                            2</div>
+                        <div class="step-dot" id="step-3"
+                            style="width: 26px; height: 26px; border-radius: 50%; background: #1a1a1f; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; z-index: 2; color: var(--text-muted); transition: all 0.3s;">
+                            3</div>
+                    </div>
+
+                    <div class="reg-input-group">
+                        <input type="text" id="reg-name" placeholder="Enter full name…" autocomplete="off">
+                        <div id="pose-hint"
+                            style="font-size: 0.75rem; color: var(--primary-red); text-align: center; margin: 5px 0; font-weight: 600; min-height: 18px;">
+                            Ready to start?</div>
+                        <button class="reg-btn" onclick="registerFace()">📸 Start 3-Point Registration</button>
+                        <div id="reg-msg" class="reg-msg" style="margin-top: 10px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Registered faces grid -->
+            <div class="known-panel glass" style="padding:18px;">
+                <div class="known-panel-header">
+                    <h3>🗂 REGISTERED FACES</h3>
+                </div>
+                <div id="faces-grid" class="faces-grid">
+                    <div class="empty-faces">Loading…</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadFaces() {
+            try {
+                const resp = await fetch('/known_faces_list');
+                const data = await resp.json();
+                const grid = document.getElementById('faces-grid');
+                const countVal = document.getElementById('face-count-val');
+
+                const faces = data.faces || [];
+                countVal.innerText = faces.length;
+
+                if (!faces.length) {
+                    grid.innerHTML = '<div class="empty-faces">No faces registered yet.<br>Point the camera at a person and register them.</div>';
+                    return;
+                }
+
+                // Group faces by name
+                const groups = {};
+                faces.forEach(f => {
+                    if (!groups[f.name]) groups[f.name] = [];
+                    groups[f.name].push(f);
+                });
+
+                grid.innerHTML = '';
+                // Set grid to 1 column for sections
+                grid.style.display = 'flex';
+                grid.style.flexDirection = 'column';
+                grid.style.gap = '30px';
+
+                Object.keys(groups).forEach(name => {
+                    const section = document.createElement('div');
+                    section.className = 'face-section';
+                    section.innerHTML = `
+                        <h4 style="font-family:Montserrat, sans-serif; font-weight:800; color:var(--primary-red); margin-bottom:12px; font-size:0.9rem; border-left:3px solid var(--primary-red); padding-left:10px;">
+                            ${name.toUpperCase()}
+                        </h4>
+                        <div class="section-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:15px;">
+                        </div>
+                    `;
+                    const innerGrid = section.querySelector('.section-grid');
+
+                    groups[name].forEach(f => {
+                        const card = document.createElement('div');
+                        card.className = 'face-card';
+                        card.innerHTML = `
+                            <img src="/face_image/${encodeURIComponent(f.filename)}" alt="${f.name}"
+                                 onerror="this.src='https://via.placeholder.com/130x130?text=Error'">
+                            <div class="face-card-info">
+                                <button class="delete-btn" onclick="deleteFace('${f.filename}', this)">🗑 Remove</button>
+                            </div>`;
+                        innerGrid.appendChild(card);
+                    });
+                    grid.appendChild(section);
+                });
+            } catch (e) {
+                document.getElementById('faces-grid').innerHTML = '<div class="empty-faces" style="color:#ef4444">Failed to load faces.</div>';
+            }
+        }
+
+        async function registerFace() {
+            const nameInput = document.getElementById('reg-name');
+            const msgDiv = document.getElementById('reg-msg');
+            const hintDiv = document.getElementById('pose-hint');
+            const progLine = document.getElementById('prog-line');
+            const name = nameInput.value.trim();
+
+            if (!name) {
+                msgDiv.className = 'reg-msg error';
+                msgDiv.innerText = 'Enter a name first.';
+                return;
+            }
+
+            const btn = document.querySelector('.reg-btn');
+            btn.disabled = true;
+            nameInput.disabled = true;
+            btn.innerText = "Registration in Progress...";
+
+            try {
+                const poses = [
+                    "Look straight at the camera. (CENTER)",
+                    "Turn your head slightly LEFT.",
+                    "Turn your head slightly RIGHT."
+                ];
+
+                const icons = ["👤", "👈", "👉"];
+
+                for (let i = 1; i <= 3; i++) {
+                    // Update UI for current step
+                    hintDiv.innerText = icons[i - 1] + " " + poses[i - 1];
+                    const dot = document.getElementById(`step-${i}`);
+                    dot.style.borderColor = 'var(--primary-red)';
+                    dot.style.color = 'var(--primary-red)';
+                    dot.style.boxShadow = '0 0 10px var(--primary-red)';
+
+                    if (i > 1) {
+                        progLine.style.width = (i === 2 ? '50%' : '100%');
+                    }
+
+                    msgDiv.className = 'reg-msg';
+                    msgDiv.innerText = `Preparing step ${i}...`;
+
+                    // Give user time to position
+                    await new Promise(r => setTimeout(r, 2500));
+
+                    msgDiv.innerText = `⚡ Capturing Angle ${i}/3... Stay still!`;
+
+                    const resp = await fetch('/register_face', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, photo_num: i })
+                    });
+                    const data = await resp.json();
+
+                    if (!resp.ok || data.status !== 'success') {
+                        throw new Error(data.message || `Photo ${i} failed.`);
+                    }
+
+                    // Confirm capture
+                    dot.innerHTML = '✓';
+                    dot.style.background = 'var(--primary-red)';
+                    dot.style.color = '#fff';
+                    msgDiv.innerText = `✅ Angle ${i} Captured!`;
+                    msgDiv.style.color = '#10b981';
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+
+                msgDiv.className = 'reg-msg success';
+                msgDiv.innerText = `🎉 Successfully registered ${name}!`;
+                hintDiv.innerText = "All angles captured.";
+                nameInput.value = '';
+                setTimeout(loadFaces, 500);
+
+                // Reset UI after success
+                setTimeout(() => {
+                    progLine.style.width = '0%';
+                    [1, 2, 3].forEach(i => {
+                        const d = document.getElementById(`step-${i}`);
+                        d.innerHTML = i;
+                        d.style.background = '#1a1a1f';
+                        d.style.color = i === 1 ? 'var(--primary-red)' : 'var(--text-muted)';
+                        d.style.borderColor = i === 1 ? 'var(--primary-red)' : 'rgba(255,255,255,0.2)';
+                        d.style.boxShadow = 'none';
+                    });
+                    btn.innerText = "📸 Start 3-Point Registration";
+                    hintDiv.innerText = "Ready to start?";
+                }, 5000);
+
+            } catch (err) {
+                msgDiv.className = 'reg-msg error';
+                msgDiv.innerText = err.message || 'Network error.';
+                btn.innerText = "📸 Retry Registration";
+            } finally {
+                btn.disabled = false;
+                nameInput.disabled = false;
+            }
+        }
+
+        async function deleteFace(filename, btn) {
+            const displayName = filename.replace(/\.(jpg|jpeg|png)$/i, '').replace(/_/g, ' ');
+            if (!confirm(`Remove "${displayName}" from registered faces?`)) return;
+
+            btn.disabled = true;
+            btn.innerText = 'Removing…';
+
+            try {
+                const resp = await fetch('/delete_face', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename })
+                });
+
+                let data;
+                try { data = await resp.json(); } catch (e) { data = { message: await resp.text() }; }
+
+                if (resp.ok && data.status === 'success') {
+                    // Animate card removal
+                    const card = btn.closest('.face-card');
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.8)';
+                    card.style.transition = 'all 0.3s';
+                    setTimeout(loadFaces, 350);
+                } else {
+                    alert(`Failed to remove: ${data.message || 'Unknown error'}`);
+                    btn.disabled = false;
+                    btn.innerText = '🗑 Remove';
+                }
+            } catch (e) {
+                alert(`Network error: ${e.message}`);
+                btn.disabled = false;
+                btn.innerText = '🗑 Remove';
+            }
+        }
+
+        // Allow pressing Enter to register
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('reg-name').addEventListener('keydown', e => {
+                if (e.key === 'Enter') registerFace();
+            });
+            loadFaces();
+        });
+    </script>
+</body>
+
+</html>

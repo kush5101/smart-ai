@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMPARO - Camera Control Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ─── Camera Control Center Styles ─────────────────────────── */
+        .cc-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: #000;
+        }
+
+        .cc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 28px;
+            background: rgba(10,10,10,0.95);
+            border-bottom: 1px solid rgba(255,65,61,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .cc-header .logo { display: flex; align-items: center; gap: 12px; }
+        .cc-header .logo img { height: 55px; }
+        .cc-header .logo h1 { font-family: 'Oswald', sans-serif; font-size: 1.5rem; letter-spacing: 3px; }
+
+        .cc-header .page-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .cc-header .header-actions { display: flex; gap: 10px; align-items: center; }
+
+        .cc-body {
+            display: flex;
+            flex: 1;
+            gap: 0;
+        }
+
+        /* ─── Sidebar ─────────────────────────────────────────────── */
+        .cc-sidebar {
+            width: 300px;
+            flex-shrink: 0;
+            background: rgba(8,8,8,0.9);
+            border-right: 1px solid rgba(255,65,61,0.12);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-section h4 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .add-cam-form { display: flex; flex-direction: column; gap: 10px; }
+
+        .add-cam-form input {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,65,61,0.2) !important;
+            border-radius: 6px !important;
+            color: #fff !important;
+            padding: 10px 12px !important;
+            font-size: 0.82rem !important;
+            transition: border-color 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .add-cam-form input:focus {
+            outline: none;
+            border-color: var(--primary-red) !important;
+        }
+
+        .btn-add-cam {
+            background: var(--primary-red);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            width: 100%;
+        }
+
+        .btn-add-cam:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-add-cam:active { transform: translateY(0); }
+
+        .cam-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .cam-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cam-item:hover { background: rgba(255,65,61,0.07); border-color: rgba(255,65,61,0.3); }
+
+        .cam-item.active {
+            background: rgba(255,65,61,0.12);
+            border-color: var(--primary-red);
+        }
+
+        .cam-item .cam-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #22c55e;
+            flex-shrink: 0;
+            box-shadow: 0 0 6px #22c55e;
+            animation: pulse-dot 2s infinite;
+        }
+
+        .cam-item .cam-dot.offline { background: #ef4444; box-shadow: 0 0 6px #ef4444; animation: none; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .cam-item .cam-info { flex: 1; min-width: 0; }
+        .cam-item .cam-name { font-weight: 600; font-size: 0.82rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cam-item .cam-source { font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .cam-item .cam-del {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            padding: 4px;
+            font-size: 0.85rem;
+        }
+
+        .cam-item:hover .cam-del { opacity: 1; }
+
+        /* ─── Grid Area ───────────────────────────────────────────── */
+        .cc-grid-area {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .cc-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cc-toolbar h3 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+        }
+
+        .layout-btns { display: flex; gap: 6px; }
+
+        .layout-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .layout-btn:hover, .layout-btn.active {
+            border-color: var(--primary-red);
+            color: var(--primary-red);
+            background: rgba(255,65,61,0.08);
+        }
+
+        .cam-grid {
+            display: grid;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .cam-grid.grid-1 { grid-template-columns: 1fr; }
+        .cam-grid.grid-4 { grid-template-columns: repeat(2, 1fr); }
+        .cam-grid.grid-9 { grid-template-columns: repeat(3, 1fr); }
+        .cam-grid.grid-16 { grid-template-columns: repeat(4, 1fr); }
+
+        .cam-cell {
+            background: #070707;
+            border: 1px solid rgba(255,65,61,0.12);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cam-cell.active-cell { border-color: var(--primary-red); box-shadow: 0 0 0 1px rgba(255,65,61,0.3); }
+
+        .cam-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cam-cell .cam-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            padding: 6px 10px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.72rem;
+        }
+
+        .cam-cell .cam-overlay .cam-label {
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .cam-cell .cam-overlay .status-badge {
+            background: #22c55e;
+            color: #000;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.62rem;
+        }
+
+        .cam-cell .cam-overlay .status-badge.offline { background: #ef4444; color: #fff; }
+
+        .cam-cell .no-stream {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.15);
+        }
+
+        .cam-cell .no-stream i { font-size: 2rem; }
+        .cam-cell .no-stream span { font-size: 0.75rem; letter-spacing: 1px; }
+
+        .cam-cell .threat-banner {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 5px 10px;
+            background: rgba(220,38,38,0.85);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+            display: none;
+            animation: blink-banner 0.8s infinite;
+        }
+
+        @keyframes blink-banner {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .status-indicator-inline {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-indicator-inline .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .status-indicator-inline .dot.green { background: #22c55e; box-shadow: 0 0 4px #22c55e; }
+        .status-indicator-inline .dot.red { background: #ef4444; box-shadow: 0 0 4px #ef4444; }
+
+        .msg-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(15,15,15,0.95);
+            border: 1px solid var(--primary-red);
+            border-radius: 8px;
+            padding: 12px 20px;
+            color: #fff;
+            font-size: 0.82rem;
+            z-index: 9999;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .msg-toast.show { transform: translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="dark-theme">
+<div class="cc-container">
+
+    <!-- Header -->
+    <header class="cc-header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AMPARO">
+        </div>
+        <span class="page-title"><i class="fas fa-video" style="color:var(--primary-red);margin-right:8px;"></i>Camera Control Center</span>
+        <div class="header-actions">
+            <div class="status-indicator-inline">
+                <div class="dot green"></div>
+                <span id="cam-count">1 CAMERA ONLINE</span>
+            </div>
+            <a href="/monitor" class="nav-btn" style="text-decoration:none; display:flex; align-items:center; gap:6px; font-size:0.8rem;">
+                <i class="fas fa-tv"></i> Live Monitor
+            </a>
+            <a href="/logout" class="nav-btn logout-btn" style="text-decoration:none;">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </header>
+
+    <div class="cc-body">
+
+        <!-- Sidebar: Camera Manager -->
+        <aside class="cc-sidebar">
+
+            <!-- Add Camera -->
+            <div class="sidebar-section">
+                <h4><i class="fas fa-plus-circle" style="color:var(--primary-red);"></i> Add Camera Source</h4>
+                <div class="add-cam-form">
+                    <input type="text" id="cam-name" placeholder="Name (e.g. Front Gate)">
+                    <input type="text" id="cam-source" placeholder="Source: 0, 1, or rtsp://...">
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-add-cam" onclick="addCamera()" style="flex:1;">
+                            <i class="fas fa-plug"></i> CONNECT
+                        </button>
+                    </div>
+                    <div id="add-msg" style="font-size:0.72rem; min-height:14px; color:var(--accent-safe);"></div>
+                </div>
+            </div>
+
+            <!-- Helpful shortcuts -->
+            <div class="sidebar-section" style="padding:10px; background:rgba(255,65,61,0.04); border-radius:8px; border:1px solid rgba(255,65,61,0.1);">
+                <h4 style="margin-bottom:8px;">Source Format Reference</h4>
+                <div style="font-size:0.7rem; color:var(--text-muted); line-height:1.8;">
+                    <div>💻 <code style="color:var(--accent-safe);">0</code> — Local Webcam</div>
+                    <div>📹 <code style="color:var(--accent-safe);">1</code> — Secondary USB Cam</div>
+                    <div>🌐 <code style="color:var(--accent-safe);">rtsp://user:pass@ip:554/stream</code></div>
+                    <div>🏠 <code style="color:var(--accent-safe);">rtsp://192.168.1.100/live</code></div>
+                </div>
+            </div>
+
+            <!-- Active Cameras List -->
+            <div class="sidebar-section" style="flex:1;">
+                <h4><i class="fas fa-list" style="color:var(--primary-red);"></i> Active Sources</h4>
+                <div id="cam-list" class="cam-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="sidebar-section">
+                <h4><i class="fas fa-chart-line" style="color:var(--primary-red);"></i> System Status</h4>
+                <div style="display:flex; flex-direction:column; gap:8px; font-size:0.78rem;">
+                    <div class="status-indicator-inline">
+                        <div class="dot green"></div>
+                        <span>Detection Engine: ONLINE</span>
+                    </div>
+                    <div class="status-indicator-inline" id="fire-status-sidebar">
+                        <div class="dot green"></div>
+                        <span>Fire: ENVIRONMENT SAFE</span>
+                    </div>
+                    <div class="status-indicator-inline" id="object-status-sidebar">
+                        <div class="dot green"></div>
+                        <span>Threats: AREA CLEAR</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Grid Area -->
+        <div class="cc-grid-area">
+            <div class="cc-toolbar">
+                <h3><i class="fas fa-th" style="color:var(--primary-red);margin-right:8px;"></i>CAMERA GRID</h3>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="layout-btns">
+                        <button class="layout-btn active" onclick="setGrid(1)" title="1 Camera">1×1</button>
+                        <button class="layout-btn" onclick="setGrid(4)" title="4 Cameras">2×2</button>
+                        <button class="layout-btn" onclick="setGrid(9)" title="9 Cameras">3×3</button>
+                        <button class="layout-btn" onclick="setGrid(16)" title="16 Cameras">4×4</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cam-grid" class="cam-grid grid-1">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="msg-toast" class="msg-toast"></div>
+
+<script>
+let cameras = [];
+let gridSize = 1;
+
+// ── Toast notification ──────────────────────────────────────────────────────
+function toast(msg, color = '#22c55e') {
+    const t = document.getElementById('msg-toast');
+    t.innerText = msg;
+    t.style.borderColor = color;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Grid layout ─────────────────────────────────────────────────────────────
+function setGrid(n) {
+    gridSize = n;
+    document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderGrid();
+}
+
+// ── Load cameras from backend ────────────────────────────────────────────────
+async function loadCameras() {
+    const resp = await fetch('/api/cameras');
+    const data = await resp.json();
+    cameras = data.cameras;
+    renderSidebar();
+    renderGrid();
+    updateCamCount();
+}
+
+// ── Render sidebar camera list ───────────────────────────────────────────────
+function renderSidebar() {
+    const list = document.getElementById('cam-list');
+    list.innerHTML = '';
+    cameras.forEach(cam => {
+        const li = document.createElement('div');
+        li.className = 'cam-item';
+        li.innerHTML = `
+            <div class="cam-dot"></div>
+            <div class="cam-info">
+                <div class="cam-name">${cam.name}</div>
+                <div class="cam-source">${cam.source === 0 || cam.source === '0' ? 'Local Webcam (Index 0)' : cam.source}</div>
+            </div>
+            ${cam.id !== 0 ? `<button class="cam-del" onclick="deleteCamera(${cam.id},event)" title="Remove"><i class="fas fa-times"></i></button>` : ''}
+        `;
+        list.appendChild(li);
+    });
+}
+
+// ── Render camera grid ───────────────────────────────────────────────────────
+function renderGrid() {
+    const grid = document.getElementById('cam-grid');
+    grid.className = `cam-grid grid-${gridSize}`;
+    grid.innerHTML = '';
+
+    const slots = gridSize;
+    for (let i = 0; i < slots; i++) {
+        const cam = cameras[i];
+        const cell = document.createElement('div');
+        cell.className = 'cam-cell' + (i === 0 ? ' active-cell' : '');
+
+        if (cam) {
+            cell.innerHTML = `
+                <img src="/video_feed/${cam.id}" alt="${cam.name}" loading="lazy"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="no-stream" style="display:none;">
+                    <i class="fas fa-video-slash"></i>
+                    <span>STREAM UNAVAILABLE</span>
+                </div>
+                <div class="cam-overlay">
+                    <span class="cam-label">${cam.name.toUpperCase()}</span>
+                    <span class="status-badge" id="badge-${cam.id}">LIVE</span>
+                </div>
+                <div class="threat-banner" id="threat-${cam.id}">⚠ THREAT DETECTED</div>
+            `;
+        } else {
+            cell.innerHTML = `
+                <div class="no-stream">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>SLOT EMPTY — ADD SOURCE</span>
+                </div>
+            `;
+        }
+        grid.appendChild(cell);
+    }
+}
+
+// ── Add camera ───────────────────────────────────────────────────────────────
+async function addCamera() {
+    const name = document.getElementById('cam-name').value.trim();
+    const source = document.getElementById('cam-source').value.trim();
+    const msg = document.getElementById('add-msg');
+
+    if (!name || !source) {
+        msg.style.color = '#ef4444';
+        msg.innerText = '⚠ Name and source are required.';
+        return;
+    }
+
+    try {
+        const resp = await fetch('/api/cameras', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, source })
+        });
+        if (resp.ok) {
+            document.getElementById('cam-name').value = '';
+            document.getElementById('cam-source').value = '';
+            msg.style.color = 'var(--accent-safe)';
+            msg.innerText = `✓ ${name} connected.`;
+            setTimeout(() => { msg.innerText = ''; }, 3000);
+            toast(`📹 ${name} added to grid`);
+            loadCameras();
+        }
+    } catch (e) { console.error(e); }
+}
+
+// ── Delete camera ────────────────────────────────────────────────────────────
+async function deleteCamera(id, e) {
+    e.stopPropagation();
+    if (!confirm('Remove this camera source?')) return;
+    const resp = await fetch('/api/cameras/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    });
+    if (resp.ok) {
+        toast('Camera removed', '#ef4444');
+        loadCameras();
+    }
+}
+
+// ── System status polling ────────────────────────────────────────────────────
+async function pollStatus() {
+    try {
+        const resp = await fetch('/status');
+        const data = await resp.json();
+
+        // Fire status
+        const fireSidebar = document.getElementById('fire-status-sidebar');
+        if (data.fire.detected) {
+            fireSidebar.innerHTML = `<div class="dot red"></div><span>Fire: ⚠ FIRE DETECTED!</span>`;
+        } else {
+            fireSidebar.innerHTML = `<div class="dot green"></div><span>Fire: ENVIRONMENT SAFE</span>`;
+        }
+
+        // Object/weapon status
+        const objSidebar = document.getElementById('object-status-sidebar');
+        if (data.object && data.object.weapon) {
+            objSidebar.innerHTML = `<div class="dot red"></div><span>Threats: ⚠ WEAPON DETECTED</span>`;
+            // Show threat banner on first cam
+            if (cameras.length > 0) {
+                const banner = document.getElementById(`threat-${cameras[0].id}`);
+                if (banner) banner.style.display = 'block';
+            }
+        } else {
+            objSidebar.innerHTML = `<div class="dot green"></div><span>Threats: AREA CLEAR</span>`;
+            cameras.forEach(cam => {
+                const banner = document.getElementById(`threat-${cam.id}`);
+                if (banner) banner.style.display = 'none';
+            });
+        }
+    } catch(e) { console.error(e); }
+}
+
+function updateCamCount() {
+    document.getElementById('cam-count').innerText = `${cameras.length} CAMERA${cameras.length !== 1 ? 'S' : ''} ONLINE`;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+loadCameras();
+setInterval(loadCameras, 30000); // Refresh camera list every 30s
+setInterval(pollStatus, 2000);   // Poll status every 2s
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users | Smart AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Montserrat:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        .users-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .user-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h3 {
+            margin: 0;
+            color: var(--text-main);
+            font-size: 1.2rem;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+        }
+
+        .btn-edit:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-blue);
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-muted);
+        }
+
+        .back-nav {
+            margin-bottom: 20px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-link:hover {
+            color: var(--text-main);
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+    <div class="users-container">
+        <div class="back-nav">
+            <a href="/" class="back-link">← Back to Dashboard</a>
+        </div>
+
+        <header style="margin-bottom: 30px;">
+            <h1 style="font-family: 'Orbitron', sans-serif; margin: 0;">User <span class="highlight">Management</span>
+            </h1>
+            <p style="color: var(--text-muted);">Manage employee accounts and access control</p>
+        </header>
+
+        <div id="users-list">
+            {% if users %}
+            {% for user in users %}
+            <div class="user-card" id="user-{{ user.Username }}">
+                <div class="user-info">
+                    <h3>{{ user.Username }}</h3>
+                </div>
+                <div class="user-actions">
+                    <button class="action-btn btn-edit" onclick="resetPassword('{{ user.Username }}')">🔑 Reset
+                        Password</button>
+                    <button class="action-btn btn-delete" onclick="deleteUser('{{ user.Username }}')">🗑️ Delete
+                        Account</button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <p>No other users registered yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        async function resetPassword(username) {
+            const newPassword = prompt(`Enter new password for ${username}:`);
+            if (!newPassword) return;
+
+            try {
+                const response = await fetch('/update_user_password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password: newPassword })
+                });
+
+                if (response.ok) {
+                    alert(`Password for ${username} updated successfully!`);
+                } else {
+                    const err = await response.json();
+                    alert(`Error: ${err.message}`);
+                }
+            } catch (error) {
+                alert('Connection error. Please try again.');
+            }
+        }
+
+        async function deleteUser(username) {
+            if (!confirm(`Are you sure you want to delete ${username}? All their data access will be revoked.`)) return;
+
+            try {
+                const response = await fetch('/delete_user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+
+                if (response.ok) {
+                    document.getElementById(`user-${username}`).remove();
+                } else {
+                    const err = await response.json();
+                    alert(`Error: ${err.message}`);
+                }
+            } catch (error) {
+                alert('Connection error. Please try again.');
+            }
+        }
+    </script>
+</body>
+
+</html>

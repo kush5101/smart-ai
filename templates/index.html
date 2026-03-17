@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMPARO - AI Monitoring Dashboard</title>
+    <meta name="description" content="Real-time AI Fire Detection and Face Attendance Monitoring System">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="dark-theme">
+    <div class="app-container">
+
+        <!-- Navigation -->
+        <nav class="navbar glass" style="margin: -16px -24px 14px -24px;">
+            <div class="nav-logo">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AMPARO Logo">
+            </div>
+            <div id="clock" class="glass" style="margin: 0;">00:00:00</div>
+            <div class="header-right">
+                <div class="nav-links">
+                    {% if session.get('user') == 'admin' %}
+                    <a href="/manage_users" class="nav-btn"><i class="fas fa-users"></i></a>
+                    {% endif %}
+                    <a href="/faces" class="nav-btn"><i class="fas fa-user-gear"></i></a>
+                    <a href="/attendance" class="nav-btn"><i class="fas fa-list-check"></i></a>
+                    <a href="/cameras" class="nav-btn" title="Camera Control Center"><i class="fas fa-video"></i></a>
+                    <a href="/logout" class="nav-btn logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+                </div>
+                <button id="mute-btn" class="control-btn"><i class="fas fa-volume-mute"></i></button>
+                <div class="status-indicator">
+                    <div class="dot online"></div>
+                    <span>SYSTEM ONLINE</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="main-content">
+
+            <!-- Camera Feed (full width) -->
+            <section class="camera-section glass">
+                <div class="section-header">
+                    <h3>LIVE FEED — CAM 01</h3>
+                    <div class="badges">
+                        <span class="badge fire-badge">SURVEILLANCE ACTIVE</span>
+                        <span class="badge att-badge">THREAT DETECTION</span>
+                    </div>
+                </div>
+                <div class="video-container">
+                    <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Live Camera Feed">
+                    <div class="scanline"></div>
+                </div>
+            </section>
+
+            <!-- Status panels (side by side) -->
+            <div class="status-row">
+
+                <!-- Fire Status -->
+                <div id="fire-card" class="status-card glass safe">
+                    <h3 class="card-title">🔥 FIRE DETECTION</h3>
+                    <div id="fire-status-text" class="status-main safe-color">ENVIRONMENT SAFE</div>
+                    <div class="conf-row">
+                        <span class="label">Confidence:</span>
+                        <span id="fire-conf" class="value">0%</span>
+                    </div>
+                </div>
+
+                <!-- Attendance Status -->
+                <div id="attendance-card" class="status-card glass attendance">
+                    <h3 class="card-title">👤 FACE ATTENDANCE</h3>
+                    <div id="att-status-text" class="status-main att-color">SCANNING...</div>
+
+                    <!-- Attendance Table -->
+                    <div class="att-table-wrap">
+                        <table class="att-table" id="att-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Check-In</th>
+                                    <th>Check-Out</th>
+                                </tr>
+                            </thead>
+                            <tbody id="att-table-body">
+                                <tr>
+                                    <td colspan="3" style="color:#64748b;">No records yet…</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="att-actions">
+                        <a href="/attendance" class="att-fullpage-btn">📋 View Full Attendance Records →</a>
+                        <a href="/export_attendance" class="export-btn" download>⬇ Export Excel</a>
+                    </div>
+                </div>
+
+                <!-- Object / Weapon Status -->
+                <div id="object-card" class="status-card glass safe">
+                    <h3 class="card-title">⚔️ OBJECT DETECTION</h3>
+                    <div id="object-status-text" class="status-main safe-color">AREA CLEAR</div>
+                    <div class="conf-row">
+                        <span class="label">Nearby:</span>
+                        <span id="nearby-objects" class="value"
+                            style="font-size: 0.9em; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">None</span>
+                    </div>
+                </div>
+
+                <!-- System Logs -->
+                <div class="log-panel glass">
+                    <h3>SYSTEM LOGS</h3>
+                    <ul id="system-log" class="log-list">
+                        <li><span class="time">System Init</span> Ready.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Fire Alert Modal -->
+        <div id="fire-alert" class="alert-modal hidden">
+            <div class="alert-content">
+                <div class="alert-icon">⚠️</div>
+                <h2 id="alert-title">CRITICAL ALERT</h2>
+                <p id="alert-desc">Immediate action required.</p>
+                <button onclick="dismissAlert()">DISMISS</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="alarm-sound" loop preload="auto">
+        <source src="{{ url_for('static', filename='audio/alarm.mp3') }}" type="audio/mpeg">
+    </audio>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

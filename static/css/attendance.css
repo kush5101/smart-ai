@@ -1,0 +1,226 @@
+/* ── Attendance Page Styles ───────────────────────────────────────────── */
+.att-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 30px;
+    gap: 16px;
+    overflow-y: auto;
+}
+
+.att-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.att-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.att-header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.att-header h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+.back-btn {
+    color: var(--primary-red);
+    border-color: rgba(229, 57, 53, 0.3);
+}
+
+.checkout-col {
+    color: var(--primary-red) !important;
+}
+
+.refresh-btn {
+    background: var(--primary-red);
+    box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3);
+}
+
+#att-summary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    gap: 2px;
+}
+
+#total-count {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.export-btn-big {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: var(--accent-safe);
+    padding: 10px 20px;
+    border-radius: 7px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.export-btn-big:hover {
+    background: rgba(16, 185, 129, 0.28);
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 18px;
+    flex-wrap: wrap;
+}
+
+.filters input,
+.filters select {
+    background: #1a1a1f;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    flex-grow: 1;
+    min-width: 150px;
+}
+
+.filters input:focus,
+.filters select:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+.filters button {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.filters button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-main);
+}
+
+/* Table */
+.table-wrap {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 0;
+}
+
+#records-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+#records-table thead th {
+    background: rgba(26, 29, 36, 0.98);
+    color: var(--text-muted);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#records-table tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--text-main);
+}
+
+#records-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.muted {
+    color: var(--text-muted) !important;
+    font-size: 0.82rem;
+}
+
+.checkin-col {
+    color: var(--accent-safe) !important;
+    font-weight: 600;
+}
+
+.checkout-col {
+    color: var(--primary-red) !important;
+    font-weight: 600;
+}
+
+.empty-row {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px !important;
+}
+
+.badge-in {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--accent-safe);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.badge-out {
+    background: rgba(100, 116, 139, 0.15);
+    color: var(--text-muted);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Floating refresh btn */
+.refresh-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 28px;
+    background: var(--primary-red);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3);
+    transition: opacity 0.2s;
+}
+
+.refresh-btn:hover {
+    opacity: 0.85;
+}

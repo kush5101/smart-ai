@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Records | AMPARO</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/attendance.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="dark-theme">
+    <div class="att-page">
+
+        <!-- Navigation -->
+        <nav class="navbar glass" style="margin: -16px -24px 14px -24px; padding: 10px 5%;">
+            <div class="nav-logo">
+                <a href="/monitor" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AMPARO Logo" style="height: 35px;">
+                    <h1 style="font-size: 1.5rem; letter-spacing: 1px;">AMPARO <span style="color: var(--primary-red);">RECORDS</span></h1>
+                </a>
+            </div>
+            
+            <div class="header-right">
+                <div id="att-summary" style="margin-right: 20px; font-family: 'Oswald';">
+                    <span id="total-count" style="color: var(--primary-red);">0 records</span> | 
+                    <span id="today-date" style="color: var(--text-muted);"></span>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <a href="/export_attendance" class="btn-contact" style="padding: 8px 20px; font-size: 0.9rem;" download><i class="fas fa-file-excel"></i> Export</a>
+                    <a href="/logout" class="btn-contact" style="padding: 8px 20px; font-size: 0.9rem; background: rgba(255,255,255,0.1);"><i class="fas fa-sign-out-alt"></i></a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Filters bar -->
+        <div class="filters glass" style="margin-top: 20px;">
+            <input type="text" id="search-input" placeholder="🔍  Search by name…">
+            <select id="date-filter">
+                <option value="">All Dates</option>
+            </select>
+            <button id="clear-btn" onclick="clearFilters()">Clear Filters</button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap glass">
+            <table id="records-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Date</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="records-body">
+                    <tr>
+                        <td colspan="8" class="empty-row">Loading records…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Floating refresh -->
+        <button class="refresh-btn" onclick="loadRecords()">↻ Refresh</button>
+    </div>
+
+    <script>
+        document.getElementById('today-date').innerText = new Date().toLocaleDateString('en-IN', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        let allRecords = [];
+
+        async function loadRecords() {
+            try {
+                const resp = await fetch('/all_attendance');
+                const data = await resp.json();
+                allRecords = data.records || [];
+                populateDateFilter();
+                renderTable(allRecords);
+                document.getElementById('total-count').innerText = `${allRecords.length} records`;
+            } catch (e) {
+                document.getElementById('records-body').innerHTML =
+                    '<tr><td colspan="7" class="empty-row" style="color:#ef4444">Failed to load records.</td></tr>';
+            }
+        }
+
+        function populateDateFilter() {
+            const sel = document.getElementById('date-filter');
+            const dates = [...new Set(allRecords.map(r => r.Date))].sort().reverse();
+            sel.innerHTML = '<option value="">All Dates</option>';
+            dates.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d; opt.innerText = d;
+                sel.appendChild(opt);
+            });
+        }
+
+        function calcDuration(cin, cout) {
+            if (!cin || !cout || cout === '—') return '—';
+            try {
+                const [h1, m1, s1] = cin.split(':').map(Number);
+                const [h2, m2, s2] = cout.split(':').map(Number);
+                let secs = (h2 * 3600 + m2 * 60 + s2) - (h1 * 3600 + m1 * 60 + s1);
+                if (secs < 0) secs += 86400; // handle overnight
+
+                const h = Math.floor(secs / 3600);
+                const m = Math.floor((secs % 3600) / 60);
+                const s = secs % 60;
+
+                if (h > 0) return `${h}h ${m}m`;
+                if (m > 0) return `${m}m ${s}s`;
+                return `${s}s`;
+            } catch { return '—'; }
+        }
+
+        function renderTable(records) {
+            const tbody = document.getElementById('records-body');
+            if (!records.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-row">No records found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '';
+            records.forEach((r, i) => {
+                const dur = calcDuration(r['Check-In'], r['Check-Out']);
+                const isIn = !r['Check-Out'] || r['Check-Out'] === '—';
+                const statusHtml = isIn
+                    ? '<span class="badge-in">IN OFFICE</span>'
+                    : '<span class="badge-out">LEFT</span>';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td class="muted">${i + 1}</td>
+                <td><strong>${r.Name}</strong></td>
+                <td class="muted">${r.Date}</td>
+                <td class="checkin-col">${r['Check-In'] || '—'}</td>
+                <td class="checkout-col">${r['Check-Out'] || '—'}</td>
+                <td class="muted">${dur}</td>
+                <td>${statusHtml}</td>
+                <td class="actions-col">
+                    <button class="action-btn edit-btn" onclick="editRecord(this, ${i})">✏️</button>
+                    <button class="action-btn del-btn" onclick="deleteRecord('${r.Name}', '${r.Date}', '${r['Check-In']}')">🗑️</button>
+                </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        let isEditing = false;
+        function editRecord(btn, index) {
+            if (isEditing) {
+                alert("Please save or cancel the current edit first.");
+                return;
+            }
+            isEditing = true;
+            pausePolling();
+
+            const r = allRecords[index];
+            const tr = btn.closest('tr');
+
+            // Store original data in dataset for safety
+            tr.dataset.oldName = r.Name;
+            tr.dataset.oldDate = r.Date;
+            tr.dataset.oldIn = r['Check-In'];
+
+            // Replace cells with inputs
+            tr.cells[1].innerHTML = `<input type="text" value="${r.Name}" class="edit-input" id="edit-name">`;
+            tr.cells[2].innerHTML = `<input type="date" value="${r.Date}" class="edit-input" id="edit-date">`;
+            tr.cells[3].innerHTML = `<input type="time" step="1" value="${r['Check-In'] || ''}" class="edit-input" id="edit-in">`;
+            tr.cells[4].innerHTML = `<input type="time" step="1" value="${r['Check-Out'] && r['Check-Out'] !== '—' ? r['Check-Out'] : ''}" class="edit-input" id="edit-out">`;
+            tr.cells[7].innerHTML = `
+                <button class="action-btn save-btn" onclick="saveRecord(this)">💾</button>
+                <button class="action-btn cancel-btn" onclick="cancelEdit()">❌</button>
+            `;
+        }
+
+        function cancelEdit() {
+            isEditing = false;
+            resumePolling();
+            renderTable(allRecords); // simple redraw restores original state
+        }
+
+        async function saveRecord(btn) {
+            const tr = btn.closest('tr');
+            const newName = document.getElementById('edit-name').value;
+            const newDate = document.getElementById('edit-date').value;
+            const newIn = document.getElementById('edit-in').value || '';
+            const newOut = document.getElementById('edit-out').value || '';
+
+            const payload = {
+                old_name: tr.dataset.oldName,
+                old_date: tr.dataset.oldDate,
+                old_in: tr.dataset.oldIn,
+                new_name: newName,
+                new_date: newDate,
+                new_in: newIn,
+                new_out: newOut
+            };
+
+            btn.disabled = true;
+            try {
+                const resp = await fetch('/update_record', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const res = await resp.json();
+                if (resp.ok && res.status === 'success') {
+                    isEditing = false;
+                    resumePolling();
+                    loadRecords(); // Reload fully from server
+                } else {
+                    alert(res.message || "Failed to update record");
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("Network error occurred.");
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteRecord(name, date, checkIn) {
+            if (isEditing) return;
+            if (!confirm(`Are you sure you want to delete the record for ${name} on ${date}?`)) return;
+
+            pausePolling();
+            try {
+                const resp = await fetch('/delete_record', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, date, check_in: checkIn })
+                });
+                const res = await resp.json();
+                if (resp.ok && res.status === 'success') {
+                    loadRecords(); // reload from server
+                } else {
+                    alert(res.message || "Failed to delete record");
+                }
+            } catch (e) {
+                alert("Network error occurred.");
+            } finally {
+                resumePolling();
+            }
+        }
+
+        let pollInterval;
+        function pausePolling() { clearInterval(pollInterval); }
+        function resumePolling() {
+            clearInterval(pollInterval);
+            pollInterval = setInterval(loadRecords, 10000);
+        }
+
+        function applyFilters() {
+            const name = document.getElementById('search-input').value.toLowerCase();
+            const date = document.getElementById('date-filter').value;
+            const filtered = allRecords.filter(r =>
+                (!name || r.Name.toLowerCase().includes(name)) &&
+                (!date || r.Date === date)
+            );
+            renderTable(filtered);
+        }
+
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('date-filter').value = '';
+            renderTable(allRecords);
+        }
+
+        document.getElementById('search-input').addEventListener('input', applyFilters);
+        document.getElementById('date-filter').addEventListener('change', applyFilters);
+
+        loadRecords();
+        resumePolling();
+    </script>
+</body>
+
+</html>

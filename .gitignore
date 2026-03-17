@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Flask/Development
+instance/
+.webassets-cache
+.env
+.flaskenv
+
+# Local Databases/Data
+database/*.csv
+attendance_database/*.csv
+static/screenshots/
+known_faces/*.jpg
+known_faces/*.png
+known_faces/*.jpeg
+
+# IDEs
+.vscode/
+.idea/
+
+# System
+.DS_Store
+Thumbs.db
