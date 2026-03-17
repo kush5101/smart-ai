@@ -32,10 +32,40 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ── Detectors ─────────────────────────────────────────────────────────────────
-fire_detector   = FireDetector(confidence_threshold=0.6)
-face_detector   = FaceAttendanceSystem()
-object_detector = ObjectDetector()
+# ── Detectors (Lazy Loading) ──────────────────────────────────────────────────
+import gc
+fire_detector   = None
+face_detector   = None
+object_detector = None
+is_initializing = False
+
+def initialize_detectors():
+    global fire_detector, face_detector, object_detector, is_initializing
+    if is_initializing: return
+    is_initializing = True
+    try:
+        print("[INFO] Initializing detectors sequentially to save memory...")
+        
+        if fire_detector is None:
+            print("[INFO] Loading Fire Detector...")
+            fire_detector = FireDetector(confidence_threshold=0.6)
+            gc.collect()
+            
+        if face_detector is None:
+            print("[INFO] Loading Face Attendance System...")
+            face_detector = FaceAttendanceSystem()
+            gc.collect()
+            
+        if object_detector is None:
+            print("[INFO] Loading Object Detector...")
+            object_detector = ObjectDetector()
+            gc.collect()
+            
+        print("[INFO] All detectors loaded successfully.")
+    except Exception as e:
+        print(f"[ERROR] Failed to load detectors: {e}")
+    finally:
+        is_initializing = False
 
 # ── Shared state ──────────────────────────────────────────────────────────────
 detection_status = {
@@ -108,6 +138,13 @@ def detection_loop():
     frame_count = 0
     while True:
         try:
+            # Ensure detectors are initialized
+            if fire_detector is None or face_detector is None or object_detector is None:
+                initialize_detectors()
+                if fire_detector is None: # Still none? Wait and retry.
+                    time.sleep(1)
+                    continue
+
             with _frame_lock:
                 if _raw_frame is None:
                     if frame_count % 100 == 0:
@@ -226,6 +263,13 @@ def video_feed_cam(cam_id):
 @login_required
 def get_status():
     current_user = session.get('user')
+    if face_detector is None:
+        return jsonify({
+            "fire": detection_status["fire"],
+            "attendance": {"recent_faces": [], "table": []},
+            "object": detection_status["object"],
+            "status": "initializing"
+        })
     table = face_detector.get_today_table()
     recent = list(detection_status["attendance"]["recent_faces"])
 
@@ -328,6 +372,8 @@ def register_face():
         name = name if name else 'Admin'
     if not name:
         return jsonify({"status": "error", "message": "Name is required."}), 400
+    if face_detector is None:
+        return jsonify({"status": "error", "message": "Detectors are still initializing. Please wait 10 seconds."}), 503
     with _frame_lock:
         if _raw_frame is None:
             return jsonify({"status": "error", "message": "No camera feed available."}), 500
@@ -374,6 +420,8 @@ def delete_face():
         if not basename or basename != filename:
             return jsonify({'status': 'error', 'message': 'Invalid filename.'}), 400
         current_user = session.get('user')
+        if face_detector is None:
+             return jsonify({'status': 'error', 'message': 'System initializing.'}), 503
         face_name = face_detector._clean_name(basename)
         if current_user != 'admin' and normalize_name(face_name) != normalize_name(current_user):
             return jsonify({'status': 'error', 'message': f'Unauthorized.'}), 403
