@@ -1,0 +1,2 @@
+https://plaything-hedge-vigorous.ngrok-free.dev
+cam1=https://plaything-hedge-vigorous.ngrok-free.dev/stream/1

@@ -664,3 +664,106 @@ h1, h2, h3, .nav-item, .btn-primary {
     font-weight: bold;
     cursor: pointer;
 }
+
+/* ── Toggle Switch ───────────────────────────────────────────────────────── */
+.toggle-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.toggle-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.toggle {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    left: 2px;
+    top: 2px;
+    background: #666;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle input:checked + .toggle-slider {
+    background: rgba(255, 65, 61, 0.25);
+    border-color: var(--primary-red);
+}
+
+.toggle input:checked + .toggle-slider::before {
+    transform: translateX(24px);
+    background: var(--primary-red);
+    box-shadow: 0 0 10px rgba(255, 65, 61, 0.5);
+}
+
+/* ── Number Plate Style ─────────────────────────────────────────────────── */
+.plate-badge {
+    background: #ffffff;
+    color: #000;
+    padding: 8px 12px 8px 32px;
+    border-radius: 6px;
+    font-weight: 800;
+    display: inline-block;
+    border: 2px solid #000;
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 2px;
+    font-size: 1.1rem;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    margin: 10px 0;
+    text-transform: uppercase;
+}
+
+.plate-badge::before {
+    content: 'IND';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: #003399;
+    color: #fff;
+    font-size: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: vertical-lr; /* Vertical text */
+    text-align: center;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+.plate-num-text {
+    display: inline-block;
+}

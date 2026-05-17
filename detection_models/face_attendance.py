@@ -20,7 +20,8 @@ class FaceAttendanceSystem:
         self.lock = threading.RLock()
 
         # Models Path
-        model_dir = os.path.join(os.getcwd(), "models")
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        model_dir = os.path.join(base_dir, "models")
         detect_model_path = os.path.join(model_dir, "face_detection_yunet.onnx")
         recog_model_path = os.path.join(model_dir, "face_recognition_sface.onnx")
 
@@ -175,65 +176,48 @@ class FaceAttendanceSystem:
                     rows.append({'Name': name, 'Check-In': s['check_in'], 'Check-Out': s['check_out'] or '—'})
         return rows
 
-    def process_frame(self, frame):
-        # 1. Detection
+    def detect_and_recognize(self, frame):
+        """Returns raw detection data without modifying the frame."""
         h, w = frame.shape[:2]
         self.detector.setInputSize((w, h))
         _, faces = self.detector.detect(frame)
         
-        if faces is None:
-            if h > 0: # Only print if we actually have a frame
-                pass # Already silent
-        else:
-            print(f"[DEBUG FaceAttendance] Found {len(faces)} potential faces in {w}x{h} frame at {self._now_str()}")
-        
+        detections = []
         seen_this_frame = set()
 
         if faces is not None:
             for face in faces:
-                # face is [x, y, w, h, eye1_x, eye1_y, ... score]
                 coords = face[:4].astype(int)
                 x, y, fw, fh = coords
                 score = face[-1]
                 
-                if score < 0.50: continue # Low confidence face
-                
-                print(f"[DEBUG FaceAttendance] Face detected with score: {score:.4f}")
+                if score < 0.50: continue
 
-                # 2. Alignment & Recognition
                 aligned_face = self.recognizer.alignCrop(frame, face)
                 feature = self.recognizer.feature(aligned_face)
 
                 name = "Unknown"
-                name_display = "Unknown"
                 max_sim = 0.0
 
                 for idx, known_feat in enumerate(self.known_face_features):
-                    # match score (Cosine Similarity)
                     sim = self.recognizer.match(feature, known_feat, cv2.FACE_RECOGNIZER_SF_FR_COSINE)
                     if sim > max_sim:
                         max_sim = sim
                         name = self.known_face_names[idx]
                 
-                print(f"[DEBUG FaceAttendance] Face sim: {max_sim:.4f} for {name} (score: {score:.4f})")
-                
-                if name != "Unknown" and max_sim > 0.40: # STRICTER match threshold
-                    # Map 0.40 - 1.0 to 0 - 100%
+                name_display = "Unknown"
+                if name != "Unknown" and max_sim > 0.40:
                     conf_pct = min(100, int(((max_sim - 0.4) / 0.6) * 100))
                     name_display = f"{name} {conf_pct}%"
                     seen_this_frame.add(name)
                     self._last_seen[name] = self._now_str()
-                    print(f"[DEBUG FaceAttendance] Recognized: {name} (sim: {max_sim:.4f})")
-                else:
-                    # Optionally show 0% or low score if match < 0.4
-                    name_display = f"Unknown"
 
-                color = (0, 220, 0) if name_display != "Unknown" else (0, 0, 220)
-                cv2.rectangle(frame, (x, y), (x+fw, y+fh), color, 2)
-                cv2.rectangle(frame, (x, y+fh-30), (x+fw, y+fh), color, cv2.FILLED)
-                cv2.putText(frame, name_display, (x+5, y+fh-7), cv2.FONT_HERSHEY_DUPLEX, 0.55, (255, 255, 255), 1)
+                detections.append({
+                    "bbox": [x, y, x+fw, y+fh],
+                    "name": name_display
+                })
 
-        # Check-In / Check-Out
+        # Update attendance state
         for name in seen_this_frame:
             self._absent_counts.pop(name, None)
             if name not in self._currently_visible:
@@ -248,7 +232,27 @@ class FaceAttendanceSystem:
                 self._absent_counts.pop(name, None)
                 self._currently_visible.remove(name)
 
-        return frame, list(seen_this_frame)
+        return detections, list(seen_this_frame)
+
+    def draw_faces(self, frame, detections):
+        """Draws the provided detections on the frame."""
+        for det in detections:
+            x1, y1, x2, y2 = det["bbox"]
+            name_display = det["name"]
+            fw = x2 - x1
+            fh = y2 - y1
+
+            color = (0, 220, 0) if "Unknown" not in name_display else (0, 0, 220)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+            cv2.rectangle(frame, (x1, y1+fh-30), (x2, y1+fh), color, cv2.FILLED)
+            cv2.putText(frame, name_display, (x1+5, y1+fh-7), cv2.FONT_HERSHEY_DUPLEX, 0.55, (255, 255, 255), 1)
+        return frame
+
+    def process_frame(self, frame):
+        """Legacy method for compatibility - detects and draws immediately."""
+        dets, seen = self.detect_and_recognize(frame)
+        frame = self.draw_faces(frame, dets)
+        return frame, seen
 
     def _register_new_face(self, frame, name, photo_num=1):
         try:

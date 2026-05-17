@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMPARO - Vehicle Scanner</title>
+    <meta name="description" content="Real-time AI Vehicle and Helmet Monitoring System">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .vehicle-log {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 10px;
+            font-size: 0.9em;
+        }
+        .vehicle-item {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid #f59e0b;
+        }
+        .vehicle-item.helmet-yes { border-left-color: #10b981; }
+        .vehicle-item.helmet-no { border-left-color: #ef4444; }
+        .v-make { font-weight: bold; color: #fff; }
+        .v-helmet { font-size: 0.8em; padding: 2px 6px; border-radius: 3px; }
+        .badge-yes { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .badge-no { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        
+        /* Number Plate Styles */
+        .plate-badge {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border: 3px solid #1e3a5f;
+            border-radius: 8px;
+            padding: 12px 20px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+            margin: 8px 0;
+        }
+        .plate-num-text {
+            font-family: 'Courier New', monospace;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #1e3a5f;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+        }
+        .plate-list-item {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .plate-header {
+            font-size: 0.7rem;
+            color: #60a5fa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .status-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        @media (max-width: 1024px) { .status-row { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px) { .status-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+
+<body class="dark-theme">
+    <div class="app-container">
+
+        <!-- Navigation -->
+        <nav class="navbar glass" style="margin: -16px -24px 14px -24px;">
+            <div class="nav-logo">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AMPARO Logo">
+            </div>
+            <div id="clock" class="glass" style="margin: 0;">00:00:00</div>
+            <div class="header-right">
+                <div class="nav-links">
+                    <a href="/monitor" class="nav-btn" title="Main Monitoring"><i class="fas fa-desktop"></i></a>
+                    <a href="/faces" class="nav-btn" title="Face Manager"><i class="fas fa-user-gear"></i></a>
+                    <a href="/attendance" class="nav-btn" title="Attendance Records"><i class="fas fa-list-check"></i></a>
+                    {% if session.get('user') == 'admin' %}
+                    <a href="/vehicles" class="nav-btn" style="color:#22c55e;" title="Vehicle Scanner"><i class="fas fa-car-side"></i></a>
+                    <a href="/cameras" class="nav-btn" title="Camera Control Center"><i class="fas fa-video"></i></a>
+                    <a href="/models" class="nav-btn" title="Model Control Center"><i class="fas fa-sliders-h"></i></a>
+                    {% endif %}
+                    <a href="/logout" class="nav-btn logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="main-content">
+
+            <!-- Camera Feed (full width) -->
+            <section class="camera-section glass">
+                <div class="section-header">
+                    <h3>VEHICLE SCANNING FEED — <span id="active-cam-title">CAM 01</span></h3>
+                    <div class="badges">
+                        <a href="/vehicle_records" class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; text-decoration: none; margin-right: 10px;"><i class="fas fa-history"></i> VIEW RECORDS</a>
+                        <span class="badge" style="background: rgba(34, 197, 94, 0.2); color: #22c55e;">VEHICLE TRACKING ACTIVE</span>
+                    </div>
+                </div>
+                <div class="video-container">
+                    <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Live Camera Feed">
+                    <div class="scanline"></div>
+                </div>
+            </section>
+
+            <!-- Status panels -->
+            <div class="status-row">
+
+                <!-- Vehicle Tracking Card -->
+                <div class="status-card glass" style="border-top-color: #f59e0b;">
+                    <h3 class="card-title">🚗 VEHICLE TRACKING</h3>
+                    <div id="vehicle-status-text" class="status-main" style="color:#f59e0b;">SCANNING...</div>
+                    <div class="conf-row">
+                        <span class="label">Live Count:</span>
+                        <span id="vehicle-count" class="value">0 vehicles</span>
+                    </div>
+
+                    <div class="toggle-wrap" style="margin: 10px 0;">
+                        <span class="toggle-label" style="font-size: 0.65rem;">OFF</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-vehicle" onchange="toggleModel('vehicle', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label" style="font-size: 0.65rem;">ON</span>
+                    </div>
+                    
+                    <div class="vehicle-log" id="vehicle-log">
+                        <div style="color:#64748b; text-align:center; padding: 20px;">Waiting for vehicles...</div>
+                    </div>
+                </div>
+
+                <!-- Helmet Scanner Card -->
+                <div class="status-card glass" style="border-top-color: #10b981;">
+                    <h3 class="card-title">⛑️ HELMET SCANNER</h3>
+                    <div id="helmet-status-text" class="status-main" style="color:#10b981;">SCANNING...</div>
+                    <div class="conf-row">
+                        <span class="label">Live Count:</span>
+                        <span id="helmet-count" class="value">0 objects</span>
+                    </div>
+                    
+                    <div class="toggle-wrap" style="margin: 10px 0;">
+                        <span class="toggle-label" style="font-size: 0.65rem;">OFF</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-helmet" onchange="toggleModel('helmet', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label" style="font-size: 0.65rem;">ON</span>
+                    </div>
+
+                    <div class="vehicle-log" id="helmet-log">
+                        <div style="color:#64748b; text-align:center; padding: 20px;">Waiting for helmets...</div>
+                    </div>
+                </div>
+
+                <!-- Number Plate Scanner Card -->
+                <div class="status-card glass" style="border-top-color: #3b82f6; border-top-width: 4px;">
+                    <h3 class="card-title" style="color: #3b82f6;">🔢 NUMBER PLATE DETECTION</h3>
+                    <div id="plate-status-text" class="status-main" style="color:#3b82f6;">SCANNING...</div>
+                    <div class="conf-row">
+                        <span class="label">Detected:</span>
+                        <span id="plate-count" class="value" style="color: #3b82f6; font-weight: bold;">0 plates</span>
+                    </div>
+                    
+                    <div class="toggle-wrap" style="margin: 10px 0;">
+                        <span class="toggle-label" style="font-size: 0.65rem;">OFF</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="toggle-plate" onchange="toggleModel('plate', this.checked)">
+                            <span class="toggle-slider" style="background: #3b82f6;"></span>
+                        </label>
+                        <span class="toggle-label" style="font-size: 0.65rem;">ON</span>
+                    </div>
+
+                    <div class="vehicle-log" id="plate-log" style="min-height: 100px; background: rgba(59, 130, 246, 0.05); border-radius: 8px;">
+                        <div style="color:#64748b; text-align:center; padding: 40px 20px;">
+                            <i class="fas fa-search" style="font-size: 2rem; color: #3b82f6; margin-bottom: 10px; display: block;"></i>
+                            Waiting for number plates...
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Minimal JS to poll /status for vehicle data -->
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('en-US');
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        let lastVehicles = "[]";
+
+        function updateVehicleDashboard() {
+            fetch('/status')
+                .then(res => res.json())
+                .then(data => {
+                    const vData = data.vehicle || { detected: [] };
+                    const allDetected = vData.detected || [];
+                    
+                    // Filter detected into vehicles, helmets, and plates
+                    const vehicles = allDetected.filter(d => d.type !== 'SafetyItem' && d.type !== 'NumberPlate');
+                    const helmets = allDetected.filter(d => d.type === 'SafetyItem' || (d.type === 'Motorcycle' && d.helmet !== 'N/A'));
+                    const plates = allDetected.filter(d => d.type === 'NumberPlate');
+                    
+                    document.getElementById('active-cam-title').textContent = data.active_camera_name || "LIVE";
+                    
+                    // --- update vehicles ---
+                    document.getElementById('vehicle-count').textContent = vehicles.length + " vehicles";
+                    if (vehicles.length > 0) {
+                        document.getElementById('vehicle-status-text').textContent = "VEHICLES VISIBLE";
+                        document.getElementById('vehicle-status-text').style.color = "#ef4444";
+                    } else {
+                        document.getElementById('vehicle-status-text').textContent = "AREA CLEAR";
+                        document.getElementById('vehicle-status-text').style.color = "#22c55e";
+                    }
+
+                    // --- update helmets ---
+                    document.getElementById('helmet-count').textContent = helmets.length + " objects";
+                    if (helmets.length > 0) {
+                        document.getElementById('helmet-status-text').textContent = "DETECTION ACTIVE";
+                        document.getElementById('helmet-status-text').style.color = "#10b981";
+                    } else {
+                        document.getElementById('helmet-status-text').textContent = "AREA CLEAR";
+                        document.getElementById('helmet-status-text').style.color = "#22c55e";
+                    }
+
+                    // --- update plates ---
+                    document.getElementById('plate-count').textContent = plates.length + " plates";
+                    if (plates.length > 0) {
+                        document.getElementById('plate-status-text').textContent = "PLATES DETECTED";
+                        document.getElementById('plate-status-text').style.color = "#3b82f6";
+                    } else {
+                        document.getElementById('plate-status-text').textContent = "AREA CLEAR";
+                        document.getElementById('plate-status-text').style.color = "#22c55e";
+                    }
+
+                    // Render logs if changed
+                    const currentStr = JSON.stringify(allDetected);
+                    if (currentStr !== lastVehicles) {
+                        lastVehicles = currentStr;
+                        
+                        // Vehicle log
+                        const vLogBox = document.getElementById('vehicle-log');
+                        if (vehicles.length === 0) {
+                            vLogBox.innerHTML = '<div style="color:#64748b; text-align:center; padding: 20px;">No vehicles in view...</div>';
+                        } else {
+                            vLogBox.innerHTML = '';
+                            vehicles.forEach(v => {
+                                vLogBox.innerHTML += `
+                                    <div class="vehicle-item">
+                                        <div>
+                                            <span class="v-make">${v.label}</span>
+                                            <br><small style="color:#aaa;">Confidence: ${v.confidence}%</small>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        }
+                        
+                        // Helmet log
+                        const hLogBox = document.getElementById('helmet-log');
+                        if (helmets.length === 0) {
+                            hLogBox.innerHTML = '<div style="color:#64748b; text-align:center; padding: 20px;">No helmets in view...</div>';
+                        } else {
+                            hLogBox.innerHTML = '';
+                            helmets.forEach(h => {
+                                let helmetHtml = '';
+                                let cssClass = '';
+                                if (h.type === 'Motorcycle') {
+                                    if (h.helmet === 'YES') {
+                                        helmetHtml = '<span class="v-helmet badge-yes"><i class="fas fa-hard-hat"></i> Helmet ON</span>';
+                                        cssClass = 'helmet-yes';
+                                    } else {
+                                        helmetHtml = '<span class="v-helmet badge-no"><i class="fas fa-skull-crossbones"></i> Helmet OFF</span>';
+                                        cssClass = 'helmet-no';
+                                    }
+                                } else if (h.type === 'SafetyItem') {
+                                    if (h.label === 'Helmet') {
+                                        helmetHtml = '<span class="v-helmet badge-yes"><i class="fas fa-hard-hat"></i> Helmet Detected</span>';
+                                        cssClass = 'helmet-yes';
+                                    } else {
+                                        helmetHtml = '<span class="v-helmet badge-no"><i class="fas fa-skull-crossbones"></i> Bare Head Detected</span>';
+                                        cssClass = 'helmet-no';
+                                    }
+                                }
+                                
+                                hLogBox.innerHTML += `
+                                    <div class="vehicle-item ${cssClass}">
+                                        <div>
+                                            <span class="v-make">${h.label}</span>
+                                            <br><small style="color:#aaa;">Confidence: ${h.confidence}%</small>
+                                        </div>
+                                        <div>${helmetHtml}</div>
+                                    </div>
+                                `;
+                            });
+                        }
+
+                        // Plate log
+                        const pLogBox = document.getElementById('plate-log');
+                        if (plates.length === 0) {
+                            pLogBox.innerHTML = '<div style="color:#64748b; text-align:center; padding: 20px;">No plates in view...</div>';
+                        } else {
+                            pLogBox.innerHTML = '';
+                            plates.forEach(p => {
+                                let plateText = p.label.toUpperCase();
+                                
+                                pLogBox.innerHTML += `
+                                    <div class="plate-list-item">
+                                        <div class="plate-header"><i class="fas fa-camera"></i> Detected Number Plate</div>
+                                        <div class="plate-badge">
+                                            <span class="plate-num-text">${plateText}</span>
+                                        </div>
+                                        <div style="font-size:0.75rem; color:#60a5fa; margin-top:5px;">
+                                            <i class="fas fa-check-circle"></i> Confidence: ${p.confidence}%
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        }
+                    }
+                })
+                .catch(err => console.error("Poll error:", err));
+        }
+
+        setInterval(updateVehicleDashboard, 500);
+
+        // --- Model Toggle Logic ---
+        async function loadToggleState() {
+            try {
+                const resp = await fetch('/api/models');
+                const data = await resp.json();
+                if (data.vehicle !== undefined) document.getElementById('toggle-vehicle').checked = data.vehicle;
+                if (data.helmet !== undefined) document.getElementById('toggle-helmet').checked = data.helmet;
+                if (data.plate !== undefined) document.getElementById('toggle-plate').checked = data.plate;
+            } catch (e) { console.error("Error loading model state:", e); }
+        }
+
+        async function toggleModel(model, enabled) {
+            try {
+                await fetch('/api/models/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model, enabled })
+                });
+                console.log(`Model ${model} toggled to ${enabled}`);
+            } catch (e) { console.error("Error toggling model:", e); }
+        }
+
+        loadToggleState();
+    </script>
+</body>
+</html>

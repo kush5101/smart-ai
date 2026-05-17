@@ -340,6 +340,12 @@
         </div>
         <span class="page-title"><i class="fas fa-video" style="color:var(--primary-red);margin-right:8px;"></i>Camera Control Center</span>
         <div class="header-actions">
+            <button onclick="testSiren()" class="layout-btn" title="Test Siren" style="background:#3b82f6; width:auto; padding:0 12px; font-size:0.7rem;">
+                <i class="fas fa-bullhorn" style="margin-right:4px;"></i> TEST SIREN
+            </button>
+            <button id="mute-btn" class="layout-btn" style="border-radius:50%; width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-volume-mute"></i>
+            </button>
             <div class="status-indicator-inline">
                 <div class="dot green"></div>
                 <span id="cam-count">1 CAMERA ONLINE</span>
@@ -434,11 +440,54 @@
     </div>
 </div>
 
+<!-- Alert Modal (Matching Monitor) -->
+<div id="fire-alert" class="alert-modal hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+    <div class="alert-content" style="background: #111; border: 2px solid #ef4444; border-radius: 12px; padding: 40px; text-align: center; max-width: 400px; width: 90%;">
+        <div class="alert-icon" style="font-size: 4rem; margin-bottom: 20px;">⚠️</div>
+        <h2 id="alert-title" style="color: #ef4444; font-family: 'Oswald', sans-serif; letter-spacing: 2px; margin-bottom: 10px;">CRITICAL ALERT</h2>
+        <p id="alert-desc" style="color: #fff; margin-bottom: 30px;">Immediate action required.</p>
+        <button onclick="dismissAlert()" style="background: #ef4444; color: #fff; border: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; cursor: pointer;">DISMISS</button>
+    </div>
+</div>
+
+<audio id="alarm-sound" loop preload="auto">
+    <source src="https://www.soundjay.com/misc/sounds/siren-1.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Audio Enabler Banner -->
+<div id="audio-enabler" class="audio-banner" onclick="enableAudio()" style="position:fixed; top:70px; left:0; width:100%; background:#ef4444; color:#fff; text-align:center; padding:10px; cursor:pointer; font-weight:bold; z-index:1000; box-shadow:0 4px 10px rgba(0,0,0,0.5);">
+    <i class="fas fa-volume-up"></i> ⚠ EMERGENCY SIREN IS MUTED BY BROWSER — CLICK HERE TO ENABLE AUDIO ALARM
+</div>
+
 <div id="msg-toast" class="msg-toast"></div>
 
 <script>
 let cameras = [];
+let activeCameraId = 0;
 let gridSize = 1;
+let isMuted = false;
+let isAlertActive = false;
+const alarmSound = document.getElementById('alarm-sound');
+const muteBtn = document.getElementById('mute-btn');
+const alertModal = document.getElementById('fire-alert');
+const alertTitle = document.getElementById('alert-title');
+const alertDesc = document.getElementById('alert-desc');
+
+// ── Browser Notifications ───────────────────────────────────────────────────
+let notificationsEnabled = false;
+async function requestNotificationPermission() {
+    if ("Notification" in window) {
+        const permission = await Notification.requestPermission();
+        notificationsEnabled = (permission === "granted");
+        if (notificationsEnabled) toast("🔔 Desktop Notifications Active", "#22c55e");
+    }
+}
+
+function sendNotification(title, body) {
+    if (notificationsEnabled) {
+        new Notification(title, { body, icon: '/static/img/alert-icon.png' });
+    }
+}
 
 // ── Toast notification ──────────────────────────────────────────────────────
 function toast(msg, color = '#22c55e') {
@@ -462,9 +511,25 @@ async function loadCameras() {
     const resp = await fetch('/api/cameras');
     const data = await resp.json();
     cameras = data.cameras;
+    activeCameraId = data.active_id;
     renderSidebar();
     renderGrid();
     updateCamCount();
+}
+
+// ── Switch active camera ───────────────────────────────────────────────────
+async function switchCamera(id) {
+    try {
+        const resp = await fetch('/api/cameras/switch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        if (resp.ok) {
+            toast(`🎥 Switched to ${cameras.find(c => c.id === id).name}`);
+            loadCameras(); // Refresh classes
+        }
+    } catch (e) { console.error(e); }
 }
 
 // ── Render sidebar camera list ───────────────────────────────────────────────
@@ -473,7 +538,9 @@ function renderSidebar() {
     list.innerHTML = '';
     cameras.forEach(cam => {
         const li = document.createElement('div');
-        li.className = 'cam-item';
+        const isActive = cam.id === activeCameraId;
+        li.className = 'cam-item' + (isActive ? ' active' : '');
+        li.onclick = () => switchCamera(cam.id);
         li.innerHTML = `
             <div class="cam-dot"></div>
             <div class="cam-info">
@@ -493,10 +560,23 @@ function renderGrid() {
     grid.innerHTML = '';
 
     const slots = gridSize;
-    for (let i = 0; i < slots; i++) {
-        const cam = cameras[i];
+    
+    // In 1x1 mode, we only show the active camera
+    // In multi-view, we show all (up to slots)
+    let displayIdxs = [];
+    if (gridSize === 1) {
+        const activeIdx = cameras.findIndex(c => c.id === activeCameraId);
+        displayIdxs = [activeIdx !== -1 ? activeIdx : 0];
+    } else {
+        for (let i = 0; i < slots; i++) displayIdxs.push(i);
+    }
+
+    displayIdxs.forEach(idx => {
+        const cam = cameras[idx];
         const cell = document.createElement('div');
-        cell.className = 'cam-cell' + (i === 0 ? ' active-cell' : '');
+        const isActive = cam && cam.id === activeCameraId;
+        cell.className = 'cam-cell' + (isActive ? ' active-cell' : '');
+        if (cam) cell.onclick = () => switchCamera(cam.id);
 
         if (cam) {
             cell.innerHTML = `
@@ -521,7 +601,7 @@ function renderGrid() {
             `;
         }
         grid.appendChild(cell);
-    }
+    });
 }
 
 // ── Add camera ───────────────────────────────────────────────────────────────
@@ -569,31 +649,133 @@ async function deleteCamera(id, e) {
     }
 }
 
-// ── System status polling ────────────────────────────────────────────────────
+function enableAudio() {
+    audioEnabled = true;
+    const banner = document.getElementById('audio-enabler');
+    if (banner) banner.style.display = 'none';
+    
+    requestNotificationPermission(); // Also request notifications on first click
+
+    muteBtn.classList.add('active');
+    muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+    isMuted = false;
+    
+    // Play test sound
+    alarmSound.play().then(() => {
+        setTimeout(() => { if (!isAlertActive) { alarmSound.pause(); alarmSound.currentTime = 0; } }, 1000);
+        toast("🔊 Emergency Siren ARMED & READY!", "#3b82f6");
+    }).catch(e => {
+        console.warn(e);
+        toast("⚠ Audio Error. Please use Chrome or Edge.", "#ef4444");
+    });
+}
+
+// ── Alarm controls ────────────────────────────────────────────────────────────
+let audioEnabled = false;
+
+muteBtn.addEventListener('click', () => {
+    if (!audioEnabled) {
+        // First click unlocks the audio context in modern browsers
+        audioEnabled = true;
+        muteBtn.classList.add('active');
+        toast("🔊 Audio Alerts Enabled", "#3b82f6");
+        
+        // Play and immediately pause to 'unlock'
+        alarmSound.play().then(() => {
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+        }).catch(e => console.warn("Audio unlock failed:", e));
+        
+        isMuted = false;
+        muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        return;
+    }
+
+    isMuted = !isMuted;
+    muteBtn.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+    if (isMuted && alarmSound) alarmSound.pause();
+    else if (isAlertActive && alarmSound) {
+        try { alarmSound.play(); } catch(e) {}
+    }
+});
+
+function dismissAlert() {
+    if (alertModal) alertModal.classList.add('hidden');
+    if (alarmSound) {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+    }
+    isAlertActive = false;
+}
+
+// ── System status polling (With Alerts) ──────────────────────────────────────
 async function pollStatus() {
     try {
         const resp = await fetch('/status');
         const data = await resp.json();
 
-        // Fire status
+        // 1. Fire status
         const fireSidebar = document.getElementById('fire-status-sidebar');
         if (data.fire.detected) {
             fireSidebar.innerHTML = `<div class="dot red"></div><span>Fire: ⚠ FIRE DETECTED!</span>`;
+            
+            // Trigger Alarm and Modal
+            if (!isAlertActive && alertModal && alertTitle && alertDesc) {
+                isAlertActive = true;
+                alertTitle.innerText = 'FIRE DETECTED!';
+                alertDesc.innerText = `Fire detected on ${data.active_camera_name}`;
+                alertModal.classList.remove('hidden');
+                
+                sendNotification("🔥 FIRE ALERT!", `Detection on ${data.active_camera_name}`);
+
+                if (!isMuted && alarmSound) {
+                    alarmSound.play().catch(e => {
+                        console.warn("Autoplay blocked.");
+                        const banner = document.getElementById('audio-enabler');
+                        if (banner) banner.style.display = 'block';
+                    });
+                }
+            }
         } else {
             fireSidebar.innerHTML = `<div class="dot green"></div><span>Fire: ENVIRONMENT SAFE</span>`;
+            if (isAlertActive && alertTitle && alertTitle.innerText.includes('FIRE')) {
+                dismissAlert();
+            }
         }
 
-        // Object/weapon status
+        // 2. Object/weapon status
         const objSidebar = document.getElementById('object-status-sidebar');
         if (data.object && data.object.weapon) {
             objSidebar.innerHTML = `<div class="dot red"></div><span>Threats: ⚠ WEAPON DETECTED</span>`;
-            // Show threat banner on first cam
-            if (cameras.length > 0) {
-                const banner = document.getElementById(`threat-${cameras[0].id}`);
+            
+            // Trigger Alarm and Modal
+            if (!isAlertActive && alertModal && alertTitle && alertDesc) {
+                isAlertActive = true;
+                alertTitle.innerText = 'WEAPON DETECTED!';
+                alertDesc.innerText = `Weapon detected on ${data.active_camera_name}`;
+                alertModal.classList.remove('hidden');
+
+                sendNotification("👮 THREAT DETECTED!", `Weapon spotted on ${data.active_camera_name}`);
+
+                if (!isMuted && alarmSound) {
+                    alarmSound.play().catch(e => {
+                        console.warn("Autoplay blocked.");
+                        const banner = document.getElementById('audio-enabler');
+                        if (banner) banner.style.display = 'block';
+                    });
+                }
+            }
+
+            // Show threat banner on grid
+            if (activeCameraId !== undefined) {
+                const banner = document.getElementById(`threat-${activeCameraId}`);
                 if (banner) banner.style.display = 'block';
             }
         } else {
             objSidebar.innerHTML = `<div class="dot green"></div><span>Threats: AREA CLEAR</span>`;
+            if (isAlertActive && alertTitle && alertTitle.innerText.includes('WEAPON')) {
+                dismissAlert();
+            }
             cameras.forEach(cam => {
                 const banner = document.getElementById(`threat-${cam.id}`);
                 if (banner) banner.style.display = 'none';
@@ -607,9 +789,28 @@ function updateCamCount() {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-loadCameras();
+window.addEventListener('load', () => {
+    loadCameras();
+    // Prompt for notifications on load - this is the "Permission" the user wants!
+    requestNotificationPermission(); 
+});
+
 setInterval(loadCameras, 30000); // Refresh camera list every 30s
 setInterval(pollStatus, 2000);   // Poll status every 2s
+
+function testSiren() {
+    if (alarmSound) {
+        toast("📢 Testing Siren... (5s)", "#3b82f6");
+        alarmSound.play().then(() => {
+            setTimeout(() => { if (!isAlertActive) { alarmSound.pause(); alarmSound.currentTime = 0; } }, 5000);
+        }).catch(e => {
+            console.error(e);
+            const banner = document.getElementById('audio-enabler');
+            if (banner) banner.style.display = 'block';
+            alert("Browser Blocked Audio! Please click the red banner at the top first.");
+        });
+    }
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMPARO - Model Control Center</title>
+    <meta name="description" content="Toggle AI detection models on and off in real-time.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .models-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .model-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px 24px;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-red);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .model-card.active::before {
+            opacity: 1;
+        }
+
+        .model-card.active {
+            border-color: rgba(255, 65, 61, 0.3);
+            box-shadow: 0 0 30px rgba(255, 65, 61, 0.08);
+        }
+
+        .model-card.disabled {
+            border-color: rgba(255, 255, 255, 0.03);
+            opacity: 0.6;
+        }
+
+        .model-icon {
+            font-size: 2.8rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .model-card h3 {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .model-desc {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            min-height: 44px;
+        }
+
+        /* Toggle Switch */
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .toggle-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .toggle {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            cursor: pointer;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            left: 3px;
+            top: 2px;
+            background: #666;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background: rgba(255, 65, 61, 0.25);
+            border-color: var(--primary-red);
+        }
+
+        .toggle input:checked + .toggle-slider::before {
+            transform: translateX(27px);
+            background: var(--primary-red);
+            box-shadow: 0 0 12px rgba(255, 65, 61, 0.5);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .status-badge.on {
+            background: rgba(0, 242, 166, 0.12);
+            color: var(--accent-safe);
+            border: 1px solid rgba(0, 242, 166, 0.3);
+        }
+
+        .status-badge.off {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Back button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 30px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: var(--primary-red);
+        }
+
+        @media (max-width: 600px) {
+            .model-grid { grid-template-columns: 1fr; }
+            .page-header h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="models-container">
+        <a href="/monitor" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+
+        <div class="page-header">
+            <h1 class="text-gradient">Model Control Center</h1>
+            <p>Enable or disable AI detection modules in real-time</p>
+        </div>
+
+        <div class="model-grid">
+            <!-- Fire Detection -->
+            <div class="model-card active" id="card-fire">
+                <span class="model-icon">🔥</span>
+                <h3>Fire Detection</h3>
+                <p class="model-desc">Real-time flame and smoke detection using advanced OpenCV heuristics with temporal confirmation.</p>
+                <div class="toggle-wrap">
+                    <span class="toggle-label">OFF</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-fire" checked onchange="toggleModel('fire', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">ON</span>
+                </div>
+                <span class="status-badge on" id="badge-fire">ACTIVE</span>
+            </div>
+
+            <!-- Face Attendance -->
+            <div class="model-card active" id="card-face">
+                <span class="model-icon">👤</span>
+                <h3>Face Attendance</h3>
+                <p class="model-desc">Automatic face recognition and attendance logging with check-in / check-out tracking.</p>
+                <div class="toggle-wrap">
+                    <span class="toggle-label">OFF</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-face" checked onchange="toggleModel('face', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">ON</span>
+                </div>
+                <span class="status-badge on" id="badge-face">ACTIVE</span>
+            </div>
+
+            <!-- Object Detection -->
+            <div class="model-card active" id="card-object">
+                <span class="model-icon">⚔️</span>
+                <h3>Object Detection</h3>
+                <p class="model-desc">YOLOv8-powered identification of nearby objects, weapons, and threats in the camera feed.</p>
+                <div class="toggle-wrap">
+                    <span class="toggle-label">OFF</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-object" checked onchange="toggleModel('object', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">ON</span>
+                </div>
+                <span class="status-badge on" id="badge-object">ACTIVE</span>
+            </div>
+
+            <!-- Vehicle Detection -->
+            <div class="model-card active" id="card-vehicle">
+                <span class="model-icon">🚗</span>
+                <h3>Vehicle Tracking</h3>
+                <p class="model-desc">AI-powered tracking for passing cars, motorcycles, trucks, and buses.</p>
+                <div class="toggle-wrap">
+                    <span class="toggle-label">OFF</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-vehicle" checked onchange="toggleModel('vehicle', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">ON</span>
+                </div>
+                <span class="status-badge on" id="badge-vehicle">ACTIVE</span>
+            </div>
+
+            <!-- Helmet Detection -->
+            <div class="model-card active" id="card-helmet">
+                <span class="model-icon">⛑️</span>
+                <h3>Helmet Scanner</h3>
+                <p class="model-desc">Safety helmet compliance logging for motorcyclists and standalone detection.</p>
+                <div class="toggle-wrap">
+                    <span class="toggle-label">OFF</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-helmet" checked onchange="toggleModel('helmet', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">ON</span>
+                </div>
+                <span class="status-badge on" id="badge-helmet">ACTIVE</span>
+            </div>
+
+            <!-- Number Plate Detection -->
+            <div class="model-card active" id="card-plate">
+                <span class="model-icon">🔢</span>
+                <h3>Number Plate Detection</h3>
+                <p class="model-desc">Automatic Number Plate Recognition (ANPR) for tracked vehicles.</p>
+                <div class="toggle-wrap">
+                    <span class="toggle-label">OFF</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-plate" checked onchange="toggleModel('plate', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">ON</span>
+                </div>
+                <span class="status-badge on" id="badge-plate">ACTIVE</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load initial state
+        async function loadState() {
+            try {
+                const resp = await fetch('/api/models');
+                const data = await resp.json();
+                for (const [model, enabled] of Object.entries(data)) {
+                    const toggle = document.getElementById('toggle-' + model);
+                    if (toggle) {
+                        toggle.checked = enabled;
+                        updateCardUI(model, enabled);
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function toggleModel(model, enabled) {
+            try {
+                await fetch('/api/models/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model, enabled })
+                });
+                updateCardUI(model, enabled);
+            } catch (e) { console.error(e); }
+        }
+
+        function updateCardUI(model, enabled) {
+            const card = document.getElementById('card-' + model);
+            const badge = document.getElementById('badge-' + model);
+            if (!card || !badge) return;
+
+            if (enabled) {
+                card.classList.add('active');
+                card.classList.remove('disabled');
+                badge.className = 'status-badge on';
+                badge.textContent = 'ACTIVE';
+            } else {
+                card.classList.remove('active');
+                card.classList.add('disabled');
+                badge.className = 'status-badge off';
+                badge.textContent = 'DISABLED';
+            }
+        }
+
+        loadState();
+    </script>
+</body>
+</html>

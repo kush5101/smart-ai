@@ -11,6 +11,10 @@ class FireDetector:
         self._history_len = 6
         self._mask_history = deque(maxlen=self._history_len)
 
+        # Temporal confirmation: require N consecutive fire frames before alerting
+        self._consecutive_fire_frames = 0
+        self._confirm_threshold = 3  # ~0.5s at detection rate
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -28,14 +32,14 @@ class FireDetector:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # -- Sub-range A: orange/yellow --
-        lower_a = np.array([10, 110, 180])   # sat>=110 & val>=180 → more inclusive orange
-        upper_a = np.array([35, 255, 255])
+        lower_a = np.array([8, 95, 160])   # Relaxed saturation and luma for edges of flames
+        upper_a = np.array([35, 255, 255])  # Narrowed Hue slightly
         mask_a  = cv2.inRange(hsv, lower_a, upper_a)
 
         # -- Sub-range B: deep red embers --
-        lower_b1 = np.array([0,  110, 180])
-        upper_b1 = np.array([10, 255, 255])
-        lower_b2 = np.array([160, 110, 180])
+        lower_b1 = np.array([0,  95, 150])
+        upper_b1 = np.array([12, 255, 255])
+        lower_b2 = np.array([165, 95, 150])
         upper_b2 = np.array([180, 255, 255])
         mask_b   = cv2.bitwise_or(
             cv2.inRange(hsv, lower_b1, upper_b1),
@@ -44,13 +48,21 @@ class FireDetector:
 
         color_mask = cv2.bitwise_or(mask_a, mask_b)
 
-        # -- Incandescent core: extremely bright pixels (>225 luma) --
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        _, luma_mask = cv2.threshold(gray, 225, 255, cv2.THRESH_BINARY)
+        # -- Skin-tone exclusion mask --
+        # Explicitly remove pixels that match human skin (H:0-25, S:20-170, V:80-255)
+        skin_lower = np.array([0, 20, 80])
+        skin_upper = np.array([25, 170, 255])
+        skin_mask = cv2.inRange(hsv, skin_lower, skin_upper)
+        color_mask = cv2.bitwise_and(color_mask, cv2.bitwise_not(skin_mask))
 
-        # Dilate the bright core only slightly so only nearby coloured pixels qualify
-        kernel_small = np.ones((9, 9), np.uint8)
-        luma_dilated = cv2.dilate(luma_mask, kernel_small, iterations=2)
+        # -- Incandescent core: extremely bright pixels (>225 luma) --
+        # Raised to 225 to prevent bright reflections on red plastic from triggering fire
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        _, luma_mask = cv2.threshold(gray, 225, 255, cv2.THRESH_BINARY)  
+
+        # Dilate more to catch distant pixels
+        kernel_large = np.ones((15, 15), np.uint8)
+        luma_dilated = cv2.dilate(luma_mask, kernel_large, iterations=2)
 
         # Final mask = fire-colour AND near a bright core
         final_mask = cv2.bitwise_and(color_mask, luma_dilated)
@@ -125,8 +137,8 @@ class FireDetector:
         for cnt in contours:
             area = cv2.contourArea(cnt)
 
-            # ── Gate 1: minimum area (lower threshold for matches/lighters) ──
-            if area < 20: # Lowered further to 20 to catch very small lighter flames
+            # ── Gate 1: minimum area ──
+            if area < 80:  # Raised to 80 to discard noise blobs
                 continue
 
             x, y, w, h = cv2.boundingRect(cnt)
@@ -138,21 +150,23 @@ class FireDetector:
                 if not (0.15 <= ratio <= 6.0):
                     continue
 
-            # ── Gate 3: solidity — allow slightly more solid for small cores ──
+            # ── Gate 3: solidity — allow high solidity for small/distant cores ──
             sol = self._solidity(cnt)
-            if sol > 0.92:
+            # If area is small (<500), fire can look very solid (like a dot)
+            sol_limit = 0.98 if area < 500 else 0.92 
+            if sol > sol_limit:
                 continue
 
-            # ── Gate 4: temporal flicker — relax for small, fast flames ──
-            # Removed flicker check for small flames to make it incredibly sensitive
-            if area > 200 and flicker < 0.0005: 
+            # ── Gate 4: temporal flicker — relax for small, distant flames ──
+            if area > 400 and flicker < 0.0004: # More strict for large fires, lenient for small
                 continue
 
-            # ── Confidence: blend of area and flicker energy ──
-            area_score    = min(1.0, area / 20000.0)
-            flicker_score = min(1.0, flicker / 0.05)
-            mock_conf     = 0.55 + 0.25 * area_score + 0.20 * flicker_score
-            mock_conf     = min(0.98, mock_conf)
+            # ── Confidence: adjusted baseline to require *some* evidence ──
+            # Base 0.58 requires a little flicker or size to cross the 0.60 threshold
+            area_score    = min(1.0, area / 10000.0)
+            flicker_score = min(1.0, flicker / 0.04)
+            mock_conf     = 0.58 + 0.20 * area_score + 0.25 * flicker_score
+            mock_conf     = min(0.99, mock_conf)
 
             if mock_conf > self.confidence_threshold:
                 detections.append({
@@ -162,7 +176,15 @@ class FireDetector:
                 })
                 fire_detected = True
 
-        return fire_detected, detections
+        # Temporal confirmation: require N consecutive fire frames
+        if fire_detected:
+            self._consecutive_fire_frames += 1
+        else:
+            self._consecutive_fire_frames = 0
+
+        # Only report fire if confirmed across multiple frames
+        confirmed = self._consecutive_fire_frames >= self._confirm_threshold
+        return (fire_detected and confirmed), detections
 
     def detect(self, frame):
         return self._detect_opencv_heuristic(frame)

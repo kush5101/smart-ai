@@ -1,0 +1,245 @@
+2026-05-17 12:34:00,066 [INFO] Config loaded from C:\Users\DELLY\Desktop\fire\smart_ai_monitoring\rtsp_relay\config.json
+2026-05-17 12:34:00,076 [INFO] ============================================================
+2026-05-17 12:34:00,076 [INFO]   RTSP Relay Microservice starting...
+2026-05-17 12:34:00,076 [INFO]   Streams: 1
+2026-05-17 12:34:00,076 [INFO]   Binding: 0.0.0.0:6001
+2026-05-17 12:34:00,077 [INFO] ============================================================
+2026-05-17 12:34:00,078 [INFO] [Cam 1] Capture thread started → rtsp://admin:admin@192.168.1.20:1935
+2026-05-17 12:34:00,078 [INFO] [Cam 1] Thread started.
+2026-05-17 12:34:00,211 [INFO] Opening tunnel named: http-6001-e8efa0c4-3387-49c9-b857-f7e1b299e1a4
+2026-05-17 12:34:02,104 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:6001
+ * Running on http://192.168.1.9:6001
+2026-05-17 12:34:02,104 [INFO] [33mPress CTRL+C to quit[0m
+2026-05-17 12:34:08,672 [INFO] t=2026-05-17T12:34:08+0530 lvl=info msg="no configuration paths supplied"
+2026-05-17 12:34:08,673 [INFO] t=2026-05-17T12:34:08+0530 lvl=info msg="ignoring default config path" path=C:\\Users\\DELLY\\AppData\\Local\\ngrok\\ngrok.yml err="GetFileAttributesEx C:\\Users\\DELLY\\AppData\\Local\\ngrok\\ngrok.yml: The system cannot find the path specified."
+2026-05-17 12:34:08,673 [INFO] t=2026-05-17T12:34:08+0530 lvl=info msg="FIPS 140 mode" enabled=false
+2026-05-17 12:34:08,674 [ERROR] t=2026-05-17T12:34:08+0530 lvl=eror msg="unable to evaluate ngrok agent binary path for symlinks" obj=tunnels.session err="GetFileAttributesEx C:\\Users\\DELLY\\AppData\\Local\\ngrok: The system cannot find the file specified."
+2026-05-17 12:34:08,718 [INFO] t=2026-05-17T12:34:08+0530 lvl=info msg="starting web service" obj=web addr=127.0.0.1:4040 allow_hosts=[]
+2026-05-17 12:34:08,967 [ERROR] t=2026-05-17T12:34:08+0530 lvl=eror msg="failed to reconnect session" obj=tunnels.session err="authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n"
+2026-05-17 12:34:08,967 [ERROR] t=2026-05-17T12:34:08+0530 lvl=eror msg="session closing" obj=tunnels.session err="authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n"
+2026-05-17 12:34:08,967 [INFO] t=2026-05-17T12:34:08+0530 lvl=info msg="received stop request" obj=app stopReq="{err:{Remote:true Inner:{Inner:0x31eefd2a7a90}} restart:false}"
+2026-05-17 12:34:08,968 [ERROR] t=2026-05-17T12:34:08+0530 lvl=eror msg="terminating with error" obj=app err="authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n"
+2026-05-17 12:34:08,968 [CRITICAL] t=2026-05-17T12:34:08+0530 lvl=crit msg="command failed" err="authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n"
+2026-05-17 12:34:08,977 [ERROR] [ngrok] Failed to start tunnel: The ngrok process errored on start: authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n.
+2026-05-17 12:34:30,121 [WARNING] [Cam 1] Could not open stream: rtsp://admin:admin@192.168.1.20:1935
+2026-05-17 12:34:30,121 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:35:03,155 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:35:36,186 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:36:09,195 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:36:42,226 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:37:15,257 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:37:48,356 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:38:21,369 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:38:54,434 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:39:27,453 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:40:00,535 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:40:33,617 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:41:06,672 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:41:39,740 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:42:12,744 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:42:45,750 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:43:18,845 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:43:51,925 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:44:24,993 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:44:58,102 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:45:33,589 [INFO] Config loaded from C:\Users\DELLY\Desktop\fire\smart_ai_monitoring\rtsp_relay\config.json
+2026-05-17 12:45:33,598 [INFO] ============================================================
+2026-05-17 12:45:33,598 [INFO]   RTSP Relay Microservice starting...
+2026-05-17 12:45:33,598 [INFO]   Streams: 1
+2026-05-17 12:45:33,598 [INFO]   Binding: 0.0.0.0:6001
+2026-05-17 12:45:33,598 [INFO] ============================================================
+2026-05-17 12:45:33,599 [INFO] [Cam 1] Capture thread started -> rtsp://admin:admin@192.168.1.20:1935
+2026-05-17 12:45:33,599 [INFO] [Cam 1] Thread started.
+2026-05-17 12:45:33,699 [INFO] Updating authtoken for default "config_path" of "ngrok_path": C:\Users\DELLY\AppData\Local\ngrok\ngrok.exe
+2026-05-17 12:45:33,751 [INFO] [ngrok] Authtoken configured from NGROK_AUTHTOKEN env var.
+2026-05-17 12:45:33,752 [INFO] Opening tunnel named: http-6001-8198d93c-e856-4a6c-b596-40f22faae0f7
+2026-05-17 12:45:33,753 [INFO] Overriding default auth token
+2026-05-17 12:45:33,785 [INFO] t=2026-05-17T12:45:33+0530 lvl=info msg="no configuration paths supplied"
+2026-05-17 12:45:33,785 [INFO] t=2026-05-17T12:45:33+0530 lvl=info msg="using configuration at default config path" path=C:\\Users\\DELLY\\AppData\\Local\\ngrok\\ngrok.yml
+2026-05-17 12:45:33,785 [INFO] t=2026-05-17T12:45:33+0530 lvl=info msg="open config file" path=C:\\Users\\DELLY\\AppData\\Local\\ngrok\\ngrok.yml err=nil
+2026-05-17 12:45:33,786 [INFO] t=2026-05-17T12:45:33+0530 lvl=info msg="FIPS 140 mode" enabled=false
+2026-05-17 12:45:33,787 [ERROR] t=2026-05-17T12:45:33+0530 lvl=eror msg="unable to evaluate ngrok agent binary path for symlinks" obj=tunnels.session err="GetFileAttributesEx C:\\Users\\DELLY\\AppData\\Local\\ngrok\\ngrok.exe: The system cannot find the file specified."
+2026-05-17 12:45:33,824 [INFO] t=2026-05-17T12:45:33+0530 lvl=info msg="starting web service" obj=web addr=127.0.0.1:4040 allow_hosts=[]
+2026-05-17 12:45:34,069 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg="client session established" obj=tunnels.session
+2026-05-17 12:45:34,069 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg="tunnel session started" obj=tunnels.session
+2026-05-17 12:45:34,106 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg=start pg=/api/tunnels id=b9bde5fa7c485a70
+2026-05-17 12:45:34,106 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg=end pg=/api/tunnels id=b9bde5fa7c485a70 status=200 dur=676.1Âµs
+2026-05-17 12:45:34,107 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg=start pg=/api/tunnels id=48087192299308ec
+2026-05-17 12:45:34,108 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg=end pg=/api/tunnels id=48087192299308ec status=200 dur=0s
+2026-05-17 12:45:34,108 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg=start pg=/api/tunnels id=971cda4d713783a5
+2026-05-17 12:45:34,109 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg=end pg=/api/tunnels id=971cda4d713783a5 status=200 dur=526.8Âµs
+2026-05-17 12:45:34,110 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg=start pg=/api/tunnels id=1d49b2df9b6cb356
+2026-05-17 12:45:34,451 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg="update available" obj=updater
+2026-05-17 12:45:34,501 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg="started tunnel" obj=tunnels name=http-6001-8198d93c-e856-4a6c-b596-40f22faae0f7 addr=http://localhost:6001 url=https://plaything-hedge-vigorous.ngrok-free.dev
+2026-05-17 12:45:34,502 [INFO] t=2026-05-17T12:45:34+0530 lvl=info msg=end pg=/api/tunnels id=1d49b2df9b6cb356 status=201 dur=391.344ms
+2026-05-17 12:45:34,502 [INFO] [ngrok] Tunnel active: https://plaything-hedge-vigorous.ngrok-free.dev
+2026-05-17 12:45:34,503 [INFO] [ngrok] Tunnel URL saved to C:\Users\DELLY\Desktop\fire\smart_ai_monitoring\rtsp_relay\tunnel_url.txt
+2026-05-17 12:45:35,620 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:6001
+ * Running on http://192.168.1.9:6001
+2026-05-17 12:45:35,620 [INFO] [33mPress CTRL+C to quit[0m
+2026-05-17 12:45:53,864 [INFO] 127.0.0.1 - - [17/May/2026 12:45:53] "GET / HTTP/1.1" 200 -
+2026-05-17 12:45:53,896 [INFO] 127.0.0.1 - - [17/May/2026 12:45:53] "GET /stream/1 HTTP/1.1" 200 -
+2026-05-17 12:45:54,122 [INFO] 127.0.0.1 - - [17/May/2026 12:45:54] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-05-17 12:45:59,206 [INFO] 127.0.0.1 - - [17/May/2026 12:45:59] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:03,661 [WARNING] [Cam 1] Could not open stream: rtsp://admin:admin@192.168.1.20:1935
+2026-05-17 12:46:03,661 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:46:04,205 [INFO] 127.0.0.1 - - [17/May/2026 12:46:04] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:09,186 [INFO] 127.0.0.1 - - [17/May/2026 12:46:09] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:14,193 [INFO] 127.0.0.1 - - [17/May/2026 12:46:14] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:19,194 [INFO] 127.0.0.1 - - [17/May/2026 12:46:19] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:24,202 [INFO] 127.0.0.1 - - [17/May/2026 12:46:24] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:29,205 [INFO] 127.0.0.1 - - [17/May/2026 12:46:29] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:34,198 [INFO] 127.0.0.1 - - [17/May/2026 12:46:34] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:36,700 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:46:39,196 [INFO] 127.0.0.1 - - [17/May/2026 12:46:39] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:44,200 [INFO] 127.0.0.1 - - [17/May/2026 12:46:44] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:49,202 [INFO] 127.0.0.1 - - [17/May/2026 12:46:49] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:54,190 [INFO] 127.0.0.1 - - [17/May/2026 12:46:54] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:46:59,201 [INFO] 127.0.0.1 - - [17/May/2026 12:46:59] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:04,198 [INFO] 127.0.0.1 - - [17/May/2026 12:47:04] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:09,200 [INFO] 127.0.0.1 - - [17/May/2026 12:47:09] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:09,807 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:47:14,194 [INFO] 127.0.0.1 - - [17/May/2026 12:47:14] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:19,199 [INFO] 127.0.0.1 - - [17/May/2026 12:47:19] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:24,193 [INFO] 127.0.0.1 - - [17/May/2026 12:47:24] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:29,206 [INFO] 127.0.0.1 - - [17/May/2026 12:47:29] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:34,196 [INFO] 127.0.0.1 - - [17/May/2026 12:47:34] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:37,383 [INFO] t=2026-05-17T12:47:37+0530 lvl=info msg="join connections" obj=join id=470d4a035fac l=127.0.0.1:6001 r=[2401:4900:8819:4f8d:29df:3921:b105:44d2]:53016
+2026-05-17 12:47:37,386 [INFO] 127.0.0.1 - - [17/May/2026 12:47:37] "GET /stream/1 HTTP/1.1" 200 -
+2026-05-17 12:47:39,203 [INFO] 127.0.0.1 - - [17/May/2026 12:47:39] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:41,663 [INFO] t=2026-05-17T12:47:41+0530 lvl=info msg="join connections" obj=join id=22c215a6eb6f l=127.0.0.1:6001 r=[2401:4900:8819:4f8d:29df:3921:b105:44d2]:52658
+2026-05-17 12:47:41,666 [INFO] 127.0.0.1 - - [17/May/2026 12:47:41] "GET /stream/1 HTTP/1.1" 200 -
+2026-05-17 12:47:42,870 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:47:44,196 [INFO] 127.0.0.1 - - [17/May/2026 12:47:44] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:49,197 [INFO] 127.0.0.1 - - [17/May/2026 12:47:49] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:54,206 [INFO] 127.0.0.1 - - [17/May/2026 12:47:54] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:47:59,196 [INFO] 127.0.0.1 - - [17/May/2026 12:47:59] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:04,189 [INFO] 127.0.0.1 - - [17/May/2026 12:48:04] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:09,206 [INFO] 127.0.0.1 - - [17/May/2026 12:48:09] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:14,202 [INFO] 127.0.0.1 - - [17/May/2026 12:48:14] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:15,922 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:48:19,195 [INFO] 127.0.0.1 - - [17/May/2026 12:48:19] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:24,199 [INFO] 127.0.0.1 - - [17/May/2026 12:48:24] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:29,198 [INFO] 127.0.0.1 - - [17/May/2026 12:48:29] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:34,199 [INFO] 127.0.0.1 - - [17/May/2026 12:48:34] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:39,190 [INFO] 127.0.0.1 - - [17/May/2026 12:48:39] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:44,189 [INFO] 127.0.0.1 - - [17/May/2026 12:48:44] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:48,982 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:48:49,198 [INFO] 127.0.0.1 - - [17/May/2026 12:48:49] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:54,202 [INFO] 127.0.0.1 - - [17/May/2026 12:48:54] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:48:59,198 [INFO] 127.0.0.1 - - [17/May/2026 12:48:59] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:04,199 [INFO] 127.0.0.1 - - [17/May/2026 12:49:04] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:09,191 [INFO] 127.0.0.1 - - [17/May/2026 12:49:09] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:14,194 [INFO] 127.0.0.1 - - [17/May/2026 12:49:14] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:19,199 [INFO] 127.0.0.1 - - [17/May/2026 12:49:19] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:22,054 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:49:24,191 [INFO] 127.0.0.1 - - [17/May/2026 12:49:24] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:29,203 [INFO] 127.0.0.1 - - [17/May/2026 12:49:29] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:34,196 [INFO] 127.0.0.1 - - [17/May/2026 12:49:34] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:39,194 [INFO] 127.0.0.1 - - [17/May/2026 12:49:39] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:44,206 [INFO] 127.0.0.1 - - [17/May/2026 12:49:44] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:49,205 [INFO] 127.0.0.1 - - [17/May/2026 12:49:49] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:53,063 [INFO] t=2026-05-17T12:49:53+0530 lvl=info msg="join connections" obj=join id=fb3d48917f48 l=127.0.0.1:6001 r=[2401:4900:8819:4f8d:29df:3921:b105:44d2]:62223
+2026-05-17 12:49:53,066 [INFO] 127.0.0.1 - - [17/May/2026 12:49:53] "GET /stream/1 HTTP/1.1" 200 -
+2026-05-17 12:49:54,207 [INFO] 127.0.0.1 - - [17/May/2026 12:49:54] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:49:55,074 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:49:55,913 [INFO] t=2026-05-17T12:49:55+0530 lvl=info msg="join connections" obj=join id=1fa4d8b3e22a l=127.0.0.1:6001 r=[2401:4900:8819:4f8d:29df:3921:b105:44d2]:51641
+2026-05-17 12:49:55,918 [INFO] 127.0.0.1 - - [17/May/2026 12:49:55] "GET /stream/1 HTTP/1.1" 200 -
+2026-05-17 12:49:59,190 [INFO] 127.0.0.1 - - [17/May/2026 12:49:59] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:04,189 [INFO] 127.0.0.1 - - [17/May/2026 12:50:04] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:09,208 [INFO] 127.0.0.1 - - [17/May/2026 12:50:09] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:14,195 [INFO] 127.0.0.1 - - [17/May/2026 12:50:14] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:19,194 [INFO] 127.0.0.1 - - [17/May/2026 12:50:19] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:24,201 [INFO] 127.0.0.1 - - [17/May/2026 12:50:24] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:28,116 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:50:29,198 [INFO] 127.0.0.1 - - [17/May/2026 12:50:29] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:34,199 [INFO] 127.0.0.1 - - [17/May/2026 12:50:34] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:39,200 [INFO] 127.0.0.1 - - [17/May/2026 12:50:39] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:44,255 [INFO] 127.0.0.1 - - [17/May/2026 12:50:44] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:49,193 [INFO] 127.0.0.1 - - [17/May/2026 12:50:49] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:54,191 [INFO] 127.0.0.1 - - [17/May/2026 12:50:54] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:50:59,196 [INFO] 127.0.0.1 - - [17/May/2026 12:50:59] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:01,118 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:51:04,201 [INFO] 127.0.0.1 - - [17/May/2026 12:51:04] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:09,189 [INFO] 127.0.0.1 - - [17/May/2026 12:51:09] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:14,199 [INFO] 127.0.0.1 - - [17/May/2026 12:51:14] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:19,187 [INFO] 127.0.0.1 - - [17/May/2026 12:51:19] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:24,197 [INFO] 127.0.0.1 - - [17/May/2026 12:51:24] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:29,192 [INFO] 127.0.0.1 - - [17/May/2026 12:51:29] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:34,161 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:51:34,194 [INFO] 127.0.0.1 - - [17/May/2026 12:51:34] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:39,198 [INFO] 127.0.0.1 - - [17/May/2026 12:51:39] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:44,193 [INFO] 127.0.0.1 - - [17/May/2026 12:51:44] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:49,209 [INFO] 127.0.0.1 - - [17/May/2026 12:51:49] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:54,206 [INFO] 127.0.0.1 - - [17/May/2026 12:51:54] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:51:59,188 [INFO] 127.0.0.1 - - [17/May/2026 12:51:59] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:52:04,191 [INFO] 127.0.0.1 - - [17/May/2026 12:52:04] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:52:07,210 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:52:09,193 [INFO] 127.0.0.1 - - [17/May/2026 12:52:09] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:52:14,200 [INFO] 127.0.0.1 - - [17/May/2026 12:52:14] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:52:19,201 [INFO] 127.0.0.1 - - [17/May/2026 12:52:19] "GET /streams HTTP/1.1" 200 -
+2026-05-17 12:52:40,281 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:53:13,377 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:53:46,430 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:54:19,534 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:54:52,591 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:55:25,597 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:55:58,658 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:56:31,700 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:57:04,745 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:57:37,830 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:58:10,920 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:58:43,985 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:59:17,061 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 12:59:50,092 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:00:23,102 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:00:56,122 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:01:29,158 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:02:02,189 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:02:35,239 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:03:08,247 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:03:41,328 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:04:14,343 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:04:47,449 [WARNING] [Cam 1] Reconnecting in 3s...
+2026-05-17 13:05:56,992 [INFO] Config loaded from C:\Users\DELLY\Desktop\fire\smart_ai_monitoring\rtsp_relay\config.json
+2026-05-17 13:05:56,997 [INFO] ============================================================
+2026-05-17 13:05:56,997 [INFO]   RTSP Relay Microservice starting...
+2026-05-17 13:05:56,998 [INFO]   Streams: 1
+2026-05-17 13:05:56,998 [INFO]   Binding: 0.0.0.0:6001
+2026-05-17 13:05:56,998 [INFO] ============================================================
+2026-05-17 13:05:56,998 [INFO] [Cam 1] Capture thread started -> rtsp://admin:admin@192.168.1.20:1935
+2026-05-17 13:05:56,998 [INFO] [Cam 1] Thread started.
+2026-05-17 13:05:57,108 [INFO] Updating authtoken for default "config_path" of "ngrok_path": C:\Users\DELLY\AppData\Local\ngrok\ngrok.exe
+2026-05-17 13:05:57,181 [INFO] [ngrok] Authtoken configured from NGROK_AUTHTOKEN env var.
+2026-05-17 13:05:57,182 [INFO] Opening tunnel named: http-6001-a6a9753f-4c12-4aa2-8223-24c298f4f189
+2026-05-17 13:05:57,182 [INFO] Overriding default auth token
+2026-05-17 13:05:57,213 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg="no configuration paths supplied"
+2026-05-17 13:05:57,213 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg="using configuration at default config path" path=C:\\Users\\DELLY\\AppData\\Local\\ngrok\\ngrok.yml
+2026-05-17 13:05:57,213 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg="open config file" path=C:\\Users\\DELLY\\AppData\\Local\\ngrok\\ngrok.yml err=nil
+2026-05-17 13:05:57,213 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg="FIPS 140 mode" enabled=false
+2026-05-17 13:05:57,215 [ERROR] t=2026-05-17T13:05:57+0530 lvl=eror msg="unable to evaluate ngrok agent binary path for symlinks" obj=tunnels.session err="GetFileAttributesEx C:\\Users\\DELLY\\AppData\\Local\\ngrok\\ngrok.exe: The system cannot find the file specified."
+2026-05-17 13:05:57,232 [WARNING] t=2026-05-17T13:05:57+0530 lvl=warn msg="can't bind default web address, trying alternatives" obj=web addr=127.0.0.1:4040
+2026-05-17 13:05:57,232 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg="starting web service" obj=web addr=127.0.0.1:4041 allow_hosts=[]
+2026-05-17 13:05:57,816 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg="client session established" obj=tunnels.session
+2026-05-17 13:05:57,817 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg="tunnel session started" obj=tunnels.session
+2026-05-17 13:05:57,881 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg=start pg=/api/tunnels id=036871dd9e6d6ffc
+2026-05-17 13:05:57,882 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg=end pg=/api/tunnels id=036871dd9e6d6ffc status=200 dur=563.9Âµs
+2026-05-17 13:05:57,883 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg=start pg=/api/tunnels id=b67a1b1301511ae3
+2026-05-17 13:05:57,883 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg=end pg=/api/tunnels id=b67a1b1301511ae3 status=200 dur=0s
+2026-05-17 13:05:57,884 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg=start pg=/api/tunnels id=54502b0695dbbbde
+2026-05-17 13:05:57,886 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg=end pg=/api/tunnels id=54502b0695dbbbde status=200 dur=0s
+2026-05-17 13:05:57,897 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg=start pg=/api/tunnels id=d1af946eeabf1bd5
+2026-05-17 13:05:57,967 [WARNING] t=2026-05-17T13:05:57+0530 lvl=warn msg="failed to start tunnel" pg=/api/tunnels id=d1af946eeabf1bd5 err="failed to start tunnel: The endpoint 'https://plaything-hedge-vigorous.ngrok-free.dev' is already online. Either\n1. stop your existing endpoint first, or\n2. start both endpoints with `--pooling-enabled` to load balance between them.\r\n\r\nERR_NGROK_334\r\n"
+2026-05-17 13:05:57,968 [INFO] t=2026-05-17T13:05:57+0530 lvl=info msg=end pg=/api/tunnels id=d1af946eeabf1bd5 status=502 dur=70.7353ms
+2026-05-17 13:05:57,968 [ERROR] [ngrok] Failed to start tunnel: ngrok client exception, API returned 502: {"error_code":103,"status_code":502,"msg":"failed to start tunnel","details":{"err":"failed to start tunnel: The endpoint 'https://plaything-hedge-vigorous.ngrok-free.dev' is already online. Either\n1. stop your existing endpoint first, or\n2. start both endpoints with `--pooling-enabled` to load balance between them.\r\n\r\nERR_NGROK_334\r\n"}}
+
+2026-05-17 13:05:58,030 [INFO] t=2026-05-17T13:05:58+0530 lvl=info msg="update available" obj=updater
+2026-05-17 13:05:59,033 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:6001
+ * Running on http://192.168.1.9:6001
+2026-05-17 13:05:59,033 [INFO] [33mPress CTRL+C to quit[0m

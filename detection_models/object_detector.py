@@ -19,10 +19,13 @@ GUN_PROXIES = {
 SKIP_NEARBY = {0} # 0 = person
 
 # Confidence thresholds
-WEAPON_CONF   = 0.40   # Reduced false positives for knives/scissors
-LIGHTER_CONF  = 0.30   # Lowered to 0.30 to catch proxy misclassifications before the weapon heuristic
-NEARBY_CONF   = 0.45
-NEARBY_AREA_RATIO = 0.08
+WEAPON_CONF   = 0.65   # Increased from 0.40 to reduce false positives
+LIGHTER_CONF  = 0.45
+NEARBY_CONF   = 0.30   # Lowered to catch more everyday objects
+# Gun proxies (cell phone/remote) need VERY high confidence to be a threat
+# This prevents fire glow from being mislabeled as a phone/gun at low conf.
+GUN_PROXY_CONF = 0.85
+NEARBY_AREA_RATIO = 0.01 # 1% of frame to detect smaller/distant items
 
 
 class ObjectDetector:
@@ -43,20 +46,23 @@ class ObjectDetector:
         print("[ObjectDetector] Model ready.")
 
     # ── Public API ────────────────────────────────────────────────────────────
-    def detect(self, frame):
+    def detect(self, frame, fire_bboxes=None):
         """
         Run YOLOv8 on frame.
+        Args:
+            frame: cv2 BGR image
+            fire_bboxes (list[dict]): Optional list of {'bbox': [x1,y1,x2,y2]} from FireDetector
         Returns:
             weapon_detected (bool)
-            weapon_labels   (list[str])   e.g. ["knife 87%"]
-            nearby_objects  (list[str])   e.g. ["bottle", "cell phone"]
-            all_detections  (list[dict])  raw boxes for drawing
+            weapon_labels   (list[str])
+            nearby_objects  (list[str])
+            all_detections  (list[dict])
         """
         h, w = frame.shape[:2]
         frame_area = h * w
 
-        # Use lower imgsz for better CPU framerate to reduce lag
-        results = self.model(frame, verbose=False, imgsz=320)[0]
+        # Use imgsz=480 for better accuracy (2.25x more pixels than 320)
+        results = self.model(frame, verbose=False, imgsz=480)[0]
 
         weapon_detected = False
         weapon_labels   = []
@@ -74,39 +80,56 @@ class ObjectDetector:
             area_pct = (w_box * h_box) / frame_area
             aspect_ratio = w_box / h_box if h_box != 0 else 0
 
-            # ── 1. Weapon/Threat Check ───────────────────────────────────────
+            # ── 1. Color Check (Fire Avoidance) ──────────────────────────────────────
+            # Optimized: Resize to 20x20 for ultra-fast color analysis
+            is_candidate = (cls_id in WEAPON_CLASSES or cls_id in GUN_PROXIES)
+            if is_candidate and 0 < y2 < h and 0 < x2 < w:
+                roi = frame[y1:y2, x1:x2]
+                if roi.size > 0:
+                    roi_small = cv2.resize(roi, (20, 20))
+                    hsv = cv2.cvtColor(roi_small, cv2.COLOR_BGR2HSV)
+                    mask = cv2.inRange(hsv, np.array([0, 80, 100]), np.array([30, 255, 255]))
+                    if cv2.countNonZero(mask) / 400.0 > 0.45:
+                        continue
+
+            # ── 2. Weapon/Threat Check ───────────────────────────────────────
             is_threat = False
             label_override = None
 
-            # Actual weapon classes
+            # Actual weapon (knife/scissors)
             if cls_id in WEAPON_CLASSES and conf >= WEAPON_CONF:
                 is_threat = True
 
-            # ── 2. Lighter Heuristic (Fixing bottle/lighter confusion) ───────
-            # Lighters are small, rectangular, and often mislabeled as bottles (39) or phones (67)
-            # Area widened to catch lighters held close to the camera (up to 20% of screen)
-            elif (cls_id == 39 or cls_id == 67) and conf >= LIGHTER_CONF and area_pct < 0.20:
-                # Support vertical (0.2-0.5) and horizontal (2.0-5.0) lighters
-                if (0.15 < aspect_ratio < 0.6) or (1.8 < aspect_ratio < 6.0):
-                    label = f"LIGHTER {conf:.0%}"
-                    if "LIGHTER" not in nearby_objects:
-                        nearby_objects.append("LIGHTER")
-                    all_detections.append({
-                        "bbox": [x1, y1, x2, y2],
-                        "label": label,
-                        "type": "nearby",
-                        "confidence": conf
-                    })
-                    continue # Skip further checks like gun heuristic
+            # (Removed the 'class 39 = LIGHTER' hack so bottles are just detected as normal bottles)
 
-            # ── 3. Gun Heuristic: Large hand-held objects labeled as phone/remote ─
-            elif cls_id in GUN_PROXIES and conf >= 0.35:
-                # Pistols often have a specific horizontal aspect ratio when held
-                # Supporting both horizontal (1.2-3.0) and gripped orientations (0.5-1.0)
-                # Area loosened to catch images shown on phones
+            # Gun Heuristic (Cell phone/Remote proxies)
+            elif cls_id in GUN_PROXIES and conf >= GUN_PROXY_CONF:
                 if (0.3 < aspect_ratio < 3.0) and 0.015 < area_pct < 0.60:
                     is_threat = True
                     label_override = f"POSSIBLE FIREARM ({class_name}) {conf:.0%}"
+
+            if is_threat:
+                # ── EXTREME Fire Avoidance: If ANY fire is in the frame, we are suspicious ──
+                # If the 'weapon' is anywhere near fire, skip it entirely.
+                if fire_bboxes:
+                    for fbox in fire_bboxes:
+                        fx1, fy1, fx2, fy2 = fbox["bbox"]
+                        # Loose containment check: Is weapon box center inside or near fire?
+                        cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+                        # If center is near fire (padding of 50px), it's likely a false positive
+                        if (fx1 - 50 < cx < fx2 + 50) and (fy1 - 50 < cy < fy2 + 50):
+                            is_threat = False
+                            break
+                        
+                        # High-overlap check
+                        ix1, iy1 = max(x1, fx1), max(y1, fy1)
+                        ix2, iy2 = min(x2, fx2), min(y2, fy2)
+                        if ix1 < ix2 and iy1 < iy2:
+                            inter_area = (ix2 - ix1) * (iy2 - iy1)
+                            weapon_area = (x2 - x1) * (y2 - y1)
+                            if inter_area / weapon_area > 0.30: # Much lower threshold
+                                is_threat = False
+                                break
 
             if is_threat:
                 weapon_detected = True

@@ -5,6 +5,11 @@ setInterval(() => {
 }, 1000);
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+    if (typeof requestNotificationPermission === 'function') {
+        requestNotificationPermission();
+    }
+});
 const fireCard = document.getElementById('fire-card');
 const fireStatusText = document.getElementById('fire-status-text');
 const fireConf = document.getElementById('fire-conf');
@@ -28,11 +33,20 @@ const camMgmtBtn = document.getElementById('cam-mgmt-btn');
 let isMuted = false;
 let isAlertActive = false;
 
-// Guard against missing audio
-if (alarmSound) {
-    alarmSound.addEventListener('error', () => {
-        console.warn("Alarm sound could not be loaded. Alerts will be visual only.");
-    });
+// ── Browser Notifications ───────────────────────────────────────────────────
+let notificationsEnabled = false;
+async function requestNotificationPermission() {
+    if ("Notification" in window) {
+        const permission = await Notification.requestPermission();
+        notificationsEnabled = (permission === "granted");
+        if (notificationsEnabled) addLog("🔔 Desktop Notifications Active");
+    }
+}
+
+function sendNotification(title, body) {
+    if (notificationsEnabled) {
+        new Notification(title, { body });
+    }
 }
 
 // ── Log helper ────────────────────────────────────────────────────────────────
@@ -46,13 +60,35 @@ function addLog(message, isAlert = false) {
 }
 
 // ── Alarm controls ────────────────────────────────────────────────────────────
+let audioEnabled = false;
+
 if (muteBtn) {
     muteBtn.addEventListener('click', () => {
+        if (!audioEnabled) {
+            audioEnabled = true;
+            requestNotificationPermission(); // Ask for notifications on first click too
+            
+            muteBtn.classList.add('active');
+            muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            isMuted = false;
+            
+            const banner = document.getElementById('audio-enabler');
+            if (banner) banner.style.display = 'none';
+
+            alarmSound.play().then(() => {
+                setTimeout(() => { if (typeof isAlertActive !== 'undefined' && !isAlertActive) { alarmSound.pause(); alarmSound.currentTime = 0; } }, 1000);
+            }).catch(e => console.warn(e));
+            return;
+        }
+        // ... rest of mute logic ...
+
         isMuted = !isMuted;
-        muteBtn.innerHTML = isMuted ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
-        if (isMuted && alarmSound) alarmSound.pause();
-        else if (isAlertActive && alarmSound) {
-            try { alarmSound.play(); } catch(e) {}
+        muteBtn.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        if (alarmSound) {
+            if (isMuted) alarmSound.pause();
+            else if (isAlertActive) {
+                try { alarmSound.play(); } catch(e) {}
+            }
         }
     });
 }
@@ -158,6 +194,12 @@ async function pollStatus() {
         const resp = await fetch('/status');
         const data = await resp.json();
 
+        // ── Update active camera name in header ──
+        const header = document.querySelector('.section-header h3');
+        if (header && data.active_camera_name) {
+            header.innerText = `LIVE FEED — ${data.active_camera_name.toUpperCase()}`;
+        }
+
         // ── Fire ──
         const fire = data.fire;
         if (fireCard && fireStatusText && fireConf) {
@@ -172,8 +214,15 @@ async function pollStatus() {
                     alertTitle.innerText = 'FIRE DETECTED!';
                     alertDesc.innerText = 'Immediate action required.';
                     alertModal.classList.remove('hidden');
+                    
+                    sendNotification("🔥 FIRE ALERT!", "Immediate action required.");
+
                     if (!isMuted && alarmSound) {
-                        try { alarmSound.play(); } catch(e) {}
+                        alarmSound.play().catch(e => {
+                            console.warn("Autoplay blocked.");
+                            const banner = document.getElementById('audio-enabler');
+                            if (banner) banner.style.display = 'block';
+                        });
                     }
                     addLog(`🔥 FIRE DETECTED! Conf: ${fire.confidence}%`, true);
                 }
@@ -201,8 +250,15 @@ async function pollStatus() {
                     alertTitle.innerText = 'WEAPON DETECTED!';
                     alertDesc.innerText = 'Threat detected on camera.';
                     alertModal.classList.remove('hidden');
+                    
+                    sendNotification("👮 THREAT DETECTED!", "Weapon spotted in view.");
+
                     if (!isMuted && alarmSound) {
-                        try { alarmSound.play(); } catch(e) {}
+                        alarmSound.play().catch(e => {
+                            console.warn("Autoplay blocked.");
+                            const banner = document.getElementById('audio-enabler');
+                            if (banner) banner.style.display = 'block';
+                        });
                     }
                     addLog(`⚔️ THREAT: ${obj.weapon_labels.join(', ')}`, true);
                 }
@@ -313,4 +369,24 @@ window.registerFace = async function () {
     }
 
     setTimeout(() => { if (msgDiv) msgDiv.innerText = ''; }, 5000);
+};
+
+// ── Audio Enabler (Autoplay Fix) ──────────────────────────────────────────────
+window.enableAudio = function() {
+    const alarmSound = document.getElementById('alarm-sound');
+    const banner = document.getElementById('audio-enabler');
+    if (!alarmSound) return;
+
+    alarmSound.play().then(() => {
+        setTimeout(() => {
+            // Check if alert is still active before stopping
+            if (typeof isAlertActive !== 'undefined' && !isAlertActive) {
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+            }
+        }, 500);
+
+        if (banner) banner.style.display = 'none';
+        console.log("Audio siren unlocked and ready.");
+    }).catch(e => console.error("Audio unlock failed:", e));
 };

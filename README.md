@@ -1,73 +1,126 @@
-# Smart AI Monitoring 👁️
+# 👁️ Smart AI Monitoring Dashboard
 
-A comprehensive, real-time AI computer vision dashboard that combines two powerful systems:
-1. **Fire Detection Surveillance**: Uses advanced OpenCV heuristics to accurately detect incandescent flames and ignore false positive red objects.
-2. **Face Recognition Attendance**: Uses advanced face encoding to automatically index people and record their presence to a CSV database.
+A multi-modal, real-time AI computer vision system designed for intelligent surveillance, safety monitoring, and automated attendance management.
 
-## 🚀 Key Features
-- **Dual Mode Camera**: Seamlessly switch between Fire Analysis and Face Attendance from a unified dashboard.
-- **Smart Attendance Logging**: Automatically stores recognized faces, dates, and times to `database/attendance.csv`.
-- **False Positive Prevention**: Strict visual criteria for fire detection eliminates errors from common red objects.
-- **Auto-Screenshots**: Captures instances of highly confident fire alerts for physical review (`static/screenshots/`).
+---
 
-## 🛠️ Local Setup
+## 🚀 Project Overview
 
-1. **Prerequisites**:  
-   * Python 3.8+
-   * Windows Users: You may need **C++ Build Tools** installed via Visual Studio to compile `dlib` during the install step.
-   * Add portrait photos of known people to the `known_faces/` directory.
+The **Smart AI Monitoring Dashboard** is a powerful Flask-based application that integrates several state-of-the-art computer vision models into a unified, user-friendly interface. It enables real-time monitoring of multiple camera sources (local and RTSP) while simultaneously running AI analysis for security, fire safety, and operational efficiency.
 
-2. **Install requirements**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
 
-3. **Run the Server**:
-   ```bash
-   python app.py
-   ```
+## ✨ Core Features
 
-4. **Access Dashboard**: Open your browser and navigate to `http://localhost:5000`
+### 1. 🔥 Fire Detection Surveillance
+*   **Intelligent Analysis**: Re-purposed OpenCV heuristics and deep learning to detect incandescent flames.
+*   **False Positive Mitigation**: Precise visual criteria to ignore standard red objects, focusing on actual thermal signatures.
+*   **Automatic Snapshots**: Captures high-confidence fire alerts for audit and physical review (`static/screenshots/`).
 
-## 🌐 Live Hosting Deployment
+### 2. 👤 Face Recognition & Attendance
+*   **Dual Tracking**: Modern facial recognition using **YuNet** and **SFace** (ONNX-optimized) for high-speed indexing.
+*   **Automated Logging**: Records check-ins and check-outs automatically to a persistent database.
+*   **User Profiles**: Self-service face registration through the dashboard for non-admin users.
+*   **Database Integration**: Generates daily attendance reports in `.csv` and `.xlsx` formats.
 
-### Render & Railway
-These platforms are excellent for hosting Python web applications.
-1. Upload this codebase to a GitHub Repository.
-2. Connect your repo to Render/Railway as a **Web Service**.
-3. **Build Command**: `pip install -r requirements.txt`
-4. **Start Command**: `gunicorn app:app --workers 1 --threads 2`
-5. **Environment Variable**: Make sure you set `PORT=5000` or let the platform inject it dynamically.
+### 3. 🛡️ Security & Object Detection
+*   **Weapon Identification**: Real-time detection of high-risk items (knives, firearms) using YOLO.
+*   **Interaction Awareness**: Alerts if suspicious actors are near identified fire hazards or secure areas.
+*   **Modular Control**: Enable or disable specific security modules via the Admin Model Control Panel.
 
-*Note for Render/Railway*: Because they do not have webcams, the video feed will fail if you run the app precisely as written in a remote environment without modifying `cv2.VideoCapture(0)` to process an IP Camera stream (RTSP/HTTP). Ensure you change index 0 to your appropriate video URL in production!
+### 4. 🏍️ Vehicle & Safety Compliance
+*   **Vehicle Identification**: Detects cars, bikes, and trucks in transit.
+*   **Helmet Enforcement**: Identifies riders not wearing helmets to ensure site safety compliance.
+*   **Number Plate (OCR)**: Extracts license plate information (YOLOv8 + OCR) and logs it for security tracking.
 
-### HuggingFace Spaces
-1. Create a new **Docker** Space.
-2. Upload these files.
-3. Your `Dockerfile` should install `libgl1-mesa-glx` to satisfy OpenCV requirements:
-   ```dockerfile
-   FROM python:3.9
-   RUN apt-get update && apt-get install -y libgl1-mesa-glx cmake
-   WORKDIR /app
-   COPY . .
-   RUN pip install -r requirements.txt
-   CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:7860"]
-   ```
+---
+
+## 🏗️ System Architecture
+
+### Backend (Python/Flask)
+*   **Asynchronous Detection Loop**: A dedicated background thread processes every active camera frame without blocking the UI.
+*   **Camera Supervisor**: Dynamically manages local `cv2.CAP_DSHOW` and network `RTSP/HTTP` capture threads.
+*   **MJPEG Streaming**: Specialized low-latency generators that overlay AI results directly onto the video stream at ~20 FPS.
+*   **Caching Layer**: Robust memory-based state management (`debug_cache.py`) to prevent flickering detections.
+
+### AI Model Stack
+*   **YOLOv8 (`yolov8n.pt`)**: General-purpose object detection and vehicle monitoring.
+*   **YuNet + SFace**: High-performance CPU-optimized facial detection and recognition.
+*   **OpenCV 4.x**: Low-level image processing, fire heuristics, and visualization.
+
+### Frontend (HTML/CSS/JS)
+*   **Real-time Dashboard**: Modern, dark-mode optimized interface with dynamic UI updates.
+*   **Model Control Center**: Toggle individual AI modules (Fire, Face, etc.) in real-time without restarting the server.
+*   **Multi-Grid View**: Monitor all connected cameras on a single page.
+
+---
+
+## 🛠️ Installation & Setup
+
+### Prerequisites
+*   Python 3.8 to 3.11 (3.12+ may have compatibility issues with older OpenCV builds).
+*   **Windows**: [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) are required for `face_recognition` and `dlib` compilation.
+
+### Step 1: Clone & Configure
+```bash
+git clone <repository_url>
+cd smart_ai_monitoring
+```
+
+### Step 2: Virtual Environment
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+```
+
+### Step 3: Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Step 4: Add Known Faces
+Place high-quality portrait images in the `known_faces/` directory. The filename should be the person's name (e.g., `John_Doe.jpg`).
+
+### Step 5: Run the Application
+```bash
+python app.py
+```
+Access the dashboard at: `http://localhost:5000`
+
+---
 
 ## 📂 Project Structure
-```
+
+```text
 smart_ai_monitoring/
-├── app.py                     # Flask Server & Logic
-├── fire_detection.py          # Ported OpenCV Fire Heuristic
-├── face_attendance.py         # Face Recognition Module
-├── templates/
-│   └── index.html             # Multi-mode Dashboard UI
-├── static/
-│   ├── css/style.css
-│   ├── js/main.js
-│   └── screenshots/           # Auto-saved Fire Evidence
-├── database/
-│   └── attendance.csv         # Generated log of seen faces
-├── known_faces/               # ADD PORTRAIT IMAGES HERE
-└── requirements.txt
+├── app.py                     # Main Flask Application & Route logic
+├── detection_models/          # Core AI Processing Modules
+│   ├── face_attendance.py     # Facial recognition logic
+│   ├── fire_detection.py      # Fire heuristic and analysis
+│   ├── object_detector.py     # Security threat identification
+│   └── vehicle_detector.py    # Vehicle & License plate tracking
+├── models/                    # pre-trained AI weights (.onnx, .pt)
+├── camera_manager/            # Dynamic CAMERA_SOURCE thread handlers
+├── database/                  # Persistent logs (attendance.csv, vehicle_logs)
+├── static/                    # Dashboard assets (CSS, JS, saved screenshots)
+├── templates/                 # Jinja2 HTML Dashboard templates
+├── known_faces/               # Root directory for face training images
+└── requirements.txt           # Python dependency list
 ```
+
+---
+
+## 🔧 Administration & Usage
+
+1.  **Login**: Use the default administrator credentials (if configured) to access full features.
+2.  **Switching Modes**: Use the sidebar to toggle between "Security View," "Attendance Summary," and "Vehicle Tracking."
+3.  **Adding Cameras**: Navigate to the "Cameras" page to add local USB cameras or remote RTSP IP streams.
+4.  **Model Control**: Enable/Disable specific detections (e.g., disable fire detection but keep faces active) to optimize performance.
+5.  **Export Logs**: Click the "Export" buttons in the attendance/vehicle pages to download Excel/CSV reports.
+
+---
+
+## 🔒 Safety & Privacy
+*   Face data is stored locally in the `face_images` cache and `known_faces` directory; no cloud processing is used.
+*   Ensure legal compliance regarding public space recording in your jurisdiction.

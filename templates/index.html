@@ -26,7 +26,11 @@
                     {% endif %}
                     <a href="/faces" class="nav-btn"><i class="fas fa-user-gear"></i></a>
                     <a href="/attendance" class="nav-btn"><i class="fas fa-list-check"></i></a>
+                    {% if session.get('user') == 'admin' %}
+                    <a href="/vehicles" class="nav-btn" title="Vehicle Scanner"><i class="fas fa-car-side"></i></a>
                     <a href="/cameras" class="nav-btn" title="Camera Control Center"><i class="fas fa-video"></i></a>
+                    <a href="/models" class="nav-btn" title="Model Control Center"><i class="fas fa-sliders-h"></i></a>
+                    {% endif %}
                     <a href="/logout" class="nav-btn logout-btn"><i class="fas fa-sign-out-alt"></i></a>
                 </div>
                 <button id="mute-btn" class="control-btn"><i class="fas fa-volume-mute"></i></button>
@@ -132,8 +136,12 @@
     </div>
 
     <audio id="alarm-sound" loop preload="auto">
-        <source src="{{ url_for('static', filename='audio/alarm.mp3') }}" type="audio/mpeg">
+        <source src="https://www.soundjay.com/misc/sounds/siren-1.mp3" type="audio/mpeg">
     </audio>
+
+    <div id="audio-enabler" onclick="enableAudio()" style="position:fixed; top:70px; left:0; width:100%; background:#ef4444; color:#fff; text-align:center; padding:10px; cursor:pointer; font-weight:bold; z-index:1000; display:block;">
+        <i class="fas fa-volume-up"></i> ⚠ EMERGENCY SIREN IS MUTED — CLICK HERE TO ENABLE AUDIO ALARM
+    </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>

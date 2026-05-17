@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMPARO - Vehicle History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .history-table th, .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .history-table th { color: #64748b; font-size: 0.8em; text-transform: uppercase; }
+        .badge-helmet { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; }
+        .badge-yes { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .badge-no { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .badge-na { background: rgba(148, 163, 184, 0.2); color: #94a6b8; }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <nav class="navbar glass" style="margin: -16px -24px 24px -24px;">
+            <div class="nav-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo"></div>
+            <div class="nav-links">
+                <a href="/monitor" class="nav-btn"><i class="fas fa-desktop"></i></a>
+                {% if session.get('user') == 'admin' %}
+                <a href="/vehicles" class="nav-btn"><i class="fas fa-car-side"></i></a>
+                {% endif %}
+                <a href="/logout" class="nav-btn logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <section class="glass" style="padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>📋 VEHICLE SCANNING RECORDS</h2>
+                    <a href="/vehicles" class="nav-btn" style="background: rgba(255,255,255,0.05);">Back to Scanner</a>
+                </div>
+                
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Vehicle Label</th>
+                            <th>Type</th>
+                            <th>Helmet</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <tr><td colspan="5" style="text-align:center; padding: 40px;">Loading records...</td></tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function loadHistory() {
+            fetch('/api/vehicle_history')
+                .then(res => res.json())
+                .then(data => {
+                    const body = document.getElementById('history-body');
+                    if (data.length === 0) {
+                        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px;">No records found today.</td></tr>';
+                        return;
+                    }
+                    body.innerHTML = '';
+                    data.forEach(r => {
+                        let helmetClass = 'badge-na';
+                        if (r.Helmet === 'YES') helmetClass = 'badge-yes';
+                        if (r.Helmet === 'NO') helmetClass = 'badge-no';
+                        
+                        body.innerHTML += `
+                            <tr>
+                                <td>${r.Timestamp}</td>
+                                <td style="font-weight:bold;">${r.Vehicle}</td>
+                                <td>${r.Type}</td>
+                                <td><span class="badge-helmet ${helmetClass}">${r.Helmet}</span></td>
+                                <td style="color:#64748b;">${r.Confidence}</td>
+                            </tr>
+                        `;
+                    });
+                })
+                .catch(err => console.error("History load error:", err));
+        }
+        loadHistory();
+        setInterval(loadHistory, 5000);
+    </script>
+</body>
+</html>
